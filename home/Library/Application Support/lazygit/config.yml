@@ -1,0 +1,14 @@
+# lazygit. macOS reads this from ~/Library/Application Support/lazygit/ unless
+# XDG_CONFIG_HOME is set, which is why it is stowed to that path rather than
+# ~/.config.
+
+git:
+  # lazygit does not use git's core.pager, so delta has to be named again here.
+  # `delta-auto` resolves the catppuccin flavour from the macOS appearance; see
+  # home/.gitconfig for the palettes themselves.
+  #
+  # 0.58 takes a list under `git.pagers` -- older guides show `git.paging.pager`,
+  # which this version ignores.
+  pagers:
+    - colorArg: always
+      pager: delta-auto --paging=never

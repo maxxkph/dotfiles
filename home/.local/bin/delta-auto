@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# delta, with the catppuccin flavour picked from the macOS appearance.
+#
+# git runs `core.pager` through a shell, so it could do this inline with a
+# $(...) substitution. lazygit and other callers may not, so the resolution
+# lives here instead -- one place, and it works no matter how it is invoked.
+#
+# Flavours are defined as delta features in ~/.gitconfig.
+
+if defaults read -g AppleInterfaceStyle >/dev/null 2>&1; then
+  feature=catppuccin-frappe
+else
+  feature=catppuccin-latte
+fi
+
+exec delta --features="$feature" "$@"

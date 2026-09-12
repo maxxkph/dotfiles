@@ -15,21 +15,24 @@
 # delta (https://github.com/dandavison/delta) as the pager for diffs: syntax
 # highlighting, line numbers, and word-level emphasis within a changed line.
 #
-# The feature is resolved per invocation from the macOS appearance, so diffs
-# follow the same light/dark switch as ghostty and nvim. delta 0.19 can detect
-# that itself via --detect-dark-light, but that only governs its own built-in
-# palette -- naming the catppuccin feature explicitly is what keeps git in step
-# with the editor. The `defaults read` costs about 6ms.
+# `delta-auto` (home/.local/bin) is a small wrapper that picks the flavour from
+# the macOS appearance, so diffs follow the same light/dark switch as ghostty
+# and nvim. git runs core.pager through a shell and could do the substitution
+# inline, but other front-ends (lazygit) invoke a pager on their own terms, so
+# the resolution lives in the wrapper where every caller gets it regardless.
+# delta 0.19 can detect light/dark itself via --detect-dark-light, but that only
+# governs its built-in palette -- naming the catppuccin feature explicitly is
+# what keeps git in step with the editor.
 #
 # The plus/minus backgrounds are the theme's green/red mixed into its base at
 # 0.20, which is exactly what lua/config/options.lua derives for DiffAdd and
 # DiffDelete in nvim. A diff therefore renders identically in the pager and in
 # the editor.
 [core]
-	pager = delta --features=$(defaults read -g AppleInterfaceStyle >/dev/null 2>&1 && echo catppuccin-frappe || echo catppuccin-latte)
+	pager = delta-auto
 
 [interactive]
-	diffFilter = delta --color-only --features=$(defaults read -g AppleInterfaceStyle >/dev/null 2>&1 && echo catppuccin-frappe || echo catppuccin-latte)
+	diffFilter = delta-auto --color-only
 
 [delta]
 	navigate = true
