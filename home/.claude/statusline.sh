@@ -2,88 +2,186 @@
 
 # Claude Code statusline.
 #
-# Colours are ANSI 16 only, never hex. Those sixteen slots are defined by the
-# terminal theme, so this follows ghostty's catppuccin light/dark switch -- and
-# any other theme -- without knowing anything about either.
+#   Opus 5 │ main● │ dotfiles │ ▓▓░░░░░░░░ 220k/1000k │ $84.79 │ 5h 7% │ 7d 16% │ high │ v2.1.263
 #
-# Bold is deliberately not used as a colour. Most terminals, ghostty included,
-# render "bold + colour" as the *bright* palette slot, and in catppuccin those
-# are the harsher, more saturated variants (bright cyan #5abfb5 against normal
-# #81c8be). Everything here used to be bold, which meant the whole line was
-# drawn in the loud half of the palette.
-#
-# Colour carries meaning rather than decoration: separators and labels are
-# dimmed so they recede, a zero count stays dim instead of shouting, and the
-# percentages shade from green to red as they fill.
+# Catppuccin, in 24-bit colour. The palette is picked from the macOS appearance
+# so it follows ghostty's `light:Catppuccin Latte,dark:Catppuccin Frappe`; the
+# dark half is exactly the frappe palette. The `defaults read` costs about 6ms.
 
-input=$(cat)
+CURRENCY='$'         # symbol to print (e.g. '$', '€', '£', '¥')
+CURRENCY_CODE='USD'  # ISO 4217 code for the rate lookup; 'USD' skips it entirely
+EXCHANGE_RATE=1      # fallback when the API cannot be reached
 
-cwd=$(echo "$input" | sed -n 's/.*"current_dir":"\([^"]*\)".*/\1/p')
+CACHE_DIR="${HOME}/.cache/cc-status-line"
+CACHE_FILE="${CACHE_DIR}/exchange-rate.json"
+CACHE_MAX_AGE=86400  # 24h
 
-# Session-level segments: context window + rate limits (nested JSON, needs jq)
-ctx_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
-five_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
-week_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
-
-# Truncate to whole numbers via parameter expansion (no subshell per value)
-ctx_pct=${ctx_pct%%.*}
-five_pct=${five_pct%%.*}
-week_pct=${week_pct%%.*}
-
-dim=$'\033[90m'
-cyan=$'\033[36m'
-green=$'\033[32m'
-yellow=$'\033[33m'
-red=$'\033[31m'
-reset=$'\033[0m'
-
-sep="${dim} | ${reset}"
-
-# heat <pct> -> colour for a fill percentage, green through red
-heat() {
-  if [ "$1" -ge 85 ]; then
-    printf '%s' "$red"
-  elif [ "$1" -ge 60 ]; then
-    printf '%s' "$yellow"
-  else
-    printf '%s' "$green"
+# get_exchange_rate -> USD->CURRENCY_CODE rate, cached for a day.
+get_exchange_rate() {
+  # Spelled out as an `if` for legibility; the original one-liner was correct
+  # (&& and || are equal precedence and left-associative, so it grouped as
+  # `(empty || USD) && echo && return`), just hard to read at a glance.
+  if [ -z "$CURRENCY_CODE" ] || [ "$CURRENCY_CODE" = "USD" ]; then
+    echo "1"
+    return
   fi
-}
 
-# gauge <label> <pct> -> "Label: 42%" with the number shaded by severity
-gauge() {
-  printf '%s%s:%s %s%s%%%s' "$dim" "$1" "$reset" "$(heat "$2")" "$2" "$reset"
-}
-
-# tally <label> <count> -> dim when zero, so only real work draws the eye
-tally() {
-  if [ "$2" -gt 0 ]; then
-    printf '%s%s:%s %s%s%s' "$dim" "$1" "$reset" "$yellow" "$2" "$reset"
-  else
-    printf '%s%s: %s%s' "$dim" "$1" "$2" "$reset"
+  if [ -f "$CACHE_FILE" ]; then
+    local now mtime age cached
+    now=$(date +%s)
+    mtime=$(stat -f %m "$CACHE_FILE" 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
+    age=$((now - mtime))
+    if [ "$age" -lt "$CACHE_MAX_AGE" ]; then
+      cached=$(jq -r --arg c "$CURRENCY_CODE" '.rates[$c] // empty' "$CACHE_FILE" 2>/dev/null)
+      [ -n "$cached" ] && echo "$cached" && return
+    fi
   fi
+
+  mkdir -p "$CACHE_DIR"
+  local fresh
+  fresh=$(curl -sf --max-time 2 "https://api.frankfurter.app/latest?from=USD&to=${CURRENCY_CODE}" 2>/dev/null)
+  if [ -n "$fresh" ]; then
+    printf '%s' "$fresh" > "$CACHE_FILE"
+    jq -r --arg c "$CURRENCY_CODE" '.rates[$c] // empty' <<< "$fresh" 2>/dev/null && return
+  fi
+
+  echo "$EXCHANGE_RATE"
 }
 
-out=""
+data=$(cat)
 
-if git -C "$cwd" rev-parse --git-dir >/dev/null 2>&1; then
-  repo_name="${cwd##*/}"
-  branch=$(git -C "$cwd" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
+# One jq call for everything. `version` and `effort.level` come from the payload
+# too -- shelling out to `claude --version` would spawn node on every render.
+# Split on a unit separator rather than a tab: tab counts as IFS *whitespace*,
+# so `read` collapses runs of them and an empty field silently shifts every
+# later value one slot to the left. \x1f is not whitespace, so empties survive.
+IFS=$'\x1f' read -r model cwd max_ctx used_pct cost_usd five_pct week_pct effort cc_version <<< "$(
+  echo "$data" | jq -r '[
+    (.model.display_name // .model.id // "unknown"),
+    (.workspace.current_dir // .cwd // ""),
+    (.context_window.context_window_size // 200000),
+    (.context_window.used_percentage // ""),
+    (.cost.total_cost_usd // 0),
+    (.rate_limits.five_hour.used_percentage // ""),
+    (.rate_limits.seven_day.used_percentage // ""),
+    (.effort.level // ""),
+    (.version // "")
+  ] | map(tostring) | join("\u001f")'
+)"
 
-  staged=$(git -C "$cwd" --no-optional-locks diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')
-  unstaged=$(git -C "$cwd" --no-optional-locks diff --name-only 2>/dev/null | wc -l | tr -d ' ')
-  untracked=$(git -C "$cwd" --no-optional-locks ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
+folder="${cwd##*/}"
+[ -z "$folder" ] && folder="?"
 
-  out="${cyan}${repo_name}${reset}${dim}@${reset}${green}${branch}${reset}"
-  out="${out}${sep}$(tally S "$staged")"
-  out="${out}${sep}$(tally U "$unstaged")"
-  out="${out}${sep}$(tally A "$untracked")"
-else
-  out="${cyan}${cwd}${reset}"
+# Git: branch plus a dot when the tree is dirty. Scoped with -C to the session's
+# directory rather than wherever this script happens to be invoked from.
+branch=""
+dirty=""
+if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
+  branch=$(git -C "$cwd" --no-optional-locks branch --show-current 2>/dev/null)
+  [ -z "$branch" ] && branch=$(git -C "$cwd" --no-optional-locks rev-parse --short HEAD 2>/dev/null)
+  if [ "${#branch}" -gt 20 ]; then
+    branch="${branch:0:19}…"
+  fi
+  if [ -n "$(git -C "$cwd" --no-optional-locks status --porcelain 2>/dev/null | head -1)" ]; then
+    dirty="●"
+  fi
 fi
 
-[ -n "$ctx_pct" ] && out="${out}${sep}$(gauge Ctx "$ctx_pct")"
-[ -n "$five_pct" ] && out="${out}${sep}$(gauge 5h "$five_pct")"
-[ -n "$week_pct" ] && out="${out}${sep}$(gauge Wk "$week_pct")"
+# Catppuccin, 24-bit. Dark is frappe, light is latte.
+if defaults read -g AppleInterfaceStyle >/dev/null 2>&1; then
+  BLUE='\033[38;2;140;170;238m'      # context bar, low
+  RED='\033[38;2;231;130;132m'       # context bar, high
+  TEAL='\033[38;2;129;200;190m'      # folder
+  MAUVE='\033[38;2;202;158;230m'     # git branch
+  LAVENDER='\033[38;2;186;187;241m'  # model
+  PEACH='\033[38;2;239;159;118m'     # dirty marker
+  GREEN='\033[38;2;166;209;137m'     # cost, healthy gauges
+  YELLOW='\033[38;2;229;200;144m'    # gauges filling up
+  OVERLAY='\033[38;2;115;121;148m'   # separators, empty bar
+  SUBTEXT='\033[38;2;165;173;206m'   # secondary text
+else
+  BLUE='\033[38;2;30;102;245m'
+  RED='\033[38;2;210;15;57m'
+  TEAL='\033[38;2;23;146;153m'
+  MAUVE='\033[38;2;136;57;239m'
+  LAVENDER='\033[38;2;114;135;253m'
+  PEACH='\033[38;2;254;100;11m'
+  GREEN='\033[38;2;64;160;43m'
+  YELLOW='\033[38;2;223;142;29m'
+  OVERLAY='\033[38;2;156;160;176m'
+  SUBTEXT='\033[38;2;108;111;133m'
+fi
+RESET='\033[0m'
 
-printf '%s' "$out"
+SEP=" ${OVERLAY}│${RESET} "
+
+# Context bar: ten blocks, blue until 60% then red.
+if [ -z "$used_pct" ] || [ "$used_pct" = "null" ]; then
+  context_info="${OVERLAY}░░░░░░░░░░${RESET}"
+else
+  pct=$(printf "%.0f" "$used_pct" 2>/dev/null || echo "$used_pct")
+  [ "$pct" -gt 100 ] 2>/dev/null && pct=100
+
+  used_k=$((max_ctx * pct / 100 / 1000))
+  max_k=$((max_ctx / 1000))
+  filled=$((pct / 10))
+
+  [ "$pct" -gt 60 ] && COLOR="$RED" || COLOR="$BLUE"
+
+  bar=""
+  for i in 0 1 2 3 4 5 6 7 8 9; do
+    if [ "$i" -lt "$filled" ]; then
+      bar="${bar}${COLOR}▓${RESET}"
+    else
+      bar="${bar}${OVERLAY}░${RESET}"
+    fi
+  done
+
+  context_info="${bar} ${SUBTEXT}${used_k}k/${max_k}k${RESET}"
+fi
+
+# gauge <label> <pct> -> "5h 7%", shaded green -> yellow -> red as it fills
+gauge() {
+  local label="$1" raw="$2" p colour
+  [ -z "$raw" ] || [ "$raw" = "null" ] && return
+  p=$(printf "%.0f" "$raw" 2>/dev/null || echo 0)
+  if [ "$p" -ge 85 ]; then
+    colour="$RED"
+  elif [ "$p" -ge 60 ]; then
+    colour="$YELLOW"
+  else
+    colour="$GREEN"
+  fi
+  printf '%s%s%s %s%s%%%s' "$OVERLAY" "$label" "$RESET" "$colour" "$p" "$RESET"
+}
+
+# Cost, converted out of USD if a currency is configured.
+if [ -n "$cost_usd" ] && [ "$cost_usd" != "0" ] && [ "$cost_usd" != "null" ]; then
+  rate=$(get_exchange_rate)
+  cost_converted=$(echo "$cost_usd * $rate" | bc -l 2>/dev/null || echo "$cost_usd")
+  cost_fmt=$(printf "%.2f" "$cost_converted" 2>/dev/null || echo "0.00")
+  cost_display="${GREEN}${CURRENCY}${cost_fmt}${RESET}"
+else
+  cost_display="${OVERLAY}${CURRENCY}0.00${RESET}"
+fi
+
+output="${LAVENDER}${model}${RESET}"
+
+if [ -n "$branch" ]; then
+  output="${output}${SEP}${MAUVE}${branch}${RESET}"
+  [ -n "$dirty" ] && output="${output}${PEACH}${dirty}${RESET}"
+fi
+
+output="${output}${SEP}${TEAL}${folder}${RESET}"
+output="${output}${SEP}${context_info}"
+output="${output}${SEP}${cost_display}"
+
+five_seg=$(gauge 5h "$five_pct")
+week_seg=$(gauge 7d "$week_pct")
+[ -n "$five_seg" ] && output="${output}${SEP}${five_seg}"
+[ -n "$week_seg" ] && output="${output}${SEP}${week_seg}"
+
+[ -n "$effort" ] && [ "$effort" != "null" ] && output="${output}${SEP}${SUBTEXT}${effort}${RESET}"
+[ -n "$cc_version" ] && [ "$cc_version" != "null" ] && output="${output}${SEP}${SUBTEXT}v${cc_version}${RESET}"
+
+printf '%b\n' "$output"
