@@ -26,32 +26,8 @@ local SCOPE_MIX = 0.57
 -- its accents at 0.20, in both flavours.
 local DIFF_MIX = 0.20
 
--- Resolved highlight, or nil when the group is empty.
-local function hl(name)
-  local h = vim.api.nvim_get_hl(0, { name = name, link = false })
-  return (h and next(h)) and h or nil
-end
-
--- First of `groups` that actually defines `key` ("fg" or "bg").
-local function pick(key, groups, fallback)
-  for _, name in ipairs(groups) do
-    local h = hl(name)
-    if h and h[key] then
-      return h[key]
-    end
-  end
-  return fallback
-end
-
--- Mix `fg` into `bg` at `alpha` (0 = bg, 1 = fg). Both are 24-bit ints, which
--- is what nvim_get_hl returns under termguicolors.
-local function blend(fg, bg, alpha)
-  local function channel(shift)
-    local a, b = math.floor(fg / shift) % 256, math.floor(bg / shift) % 256
-    return math.min(255, math.max(0, math.floor(b + (a - b) * alpha + 0.5)))
-  end
-  return channel(65536) * 65536 + channel(256) * 256 + channel(1)
-end
+local palette = require("config.palette")
+local hl, pick, blend = palette.hl, palette.pick, palette.blend
 
 -- Note that no group read here is a group written below. That keeps this
 -- idempotent: re-running it without a colorscheme reload cannot feed its own

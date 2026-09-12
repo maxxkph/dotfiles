@@ -1,39 +1,49 @@
--- oldworld.nvim ships no bufferline integration, so the buffer tabs fall back to
--- bufferline's washed-out derived colors in both themes. Re-color them from the
--- active palette here. `opts.highlights` as a function is re-run by bufferline on
--- every ColorScheme event, so this follows the maxx-mellow <-> maxx-mellow-dawn swap.
+-- Buffer tabs, coloured from the active theme. bufferline's own derived colours
+-- are washed out, and several themes (oldworld among them) ship no bufferline
+-- integration at all, so the highlights are built here instead.
+--
+-- `opts.highlights` is passed as a *function*, which bufferline re-runs on every
+-- ColorScheme event -- that is what keeps the tabs in step with a light/dark
+-- flip, or with switching theme entirely.
 
-local palettes = {
-  dark = {
-    fill = "#131314", -- empty tabline area (a touch below editor bg)
-    bg = "#161617", -- selected tab: editor bg, "connected" to the buffer
-    inactive = "#6c6874",
-    visible = "#9f9ca6",
-    fg = "#c9c7cd",
-    modified = "#90b99f",
-    close = "#ea83a5",
-    error = "#ea83a5",
-    warning = "#e6b99d",
-    info = "#92a2d5",
-    hint = "#85b5ba",
-  },
-  light = {
-    fill = "#eae7e3",
-    bg = "#f4f2f0",
-    inactive = "#9a95a2",
-    visible = "#6b6874",
-    fg = "#48454f",
-    modified = "#4f7d5e",
-    close = "#b85a7c",
-    error = "#b85a7c",
-    warning = "#996f42",
-    info = "#5464a8",
-    hint = "#468086",
-  },
-}
+local palette = require("config.palette")
+
+local function hex(n)
+  return string.format("#%06x", n)
+end
+
+-- Every entry comes from a group the theme defines itself. Checked against
+-- maxx-mellow and its light companion, this reproduces the palette that used to
+-- be hardcoded here exactly, for all but `visible` and `info`.
+local function derive()
+  local fg = palette.pick("fg", { "Normal" }, 0xc9c7cd)
+  local bg = palette.pick("bg", { "Normal" }, 0x161617)
+
+  -- Unselected tab text. TabLine is precisely this in every theme checked.
+  local inactive = palette.pick("fg", { "TabLine", "NonText", "Comment" }, fg)
+
+  return {
+    -- The empty stretch of tabline. TabLineFill is the theme's own opinion on
+    -- that exact strip; failing that, a shade below the editor background.
+    fill = hex(palette.pick("bg", { "TabLineFill", "NormalFloat" }, palette.darken(bg, 0.14))),
+    -- The selected tab takes the editor background, so it reads as connected
+    -- to the buffer beneath it.
+    bg = hex(bg),
+    fg = hex(fg),
+    inactive = hex(inactive),
+    -- Visible-but-unfocused sits between the two.
+    visible = hex(palette.blend(fg, inactive, 0.58)),
+    modified = hex(palette.pick("fg", { "diffAdded", "GitSignsAdd", "String" }, fg)),
+    close = hex(palette.pick("fg", { "diffRemoved", "GitSignsDelete", "DiagnosticError" }, fg)),
+    error = hex(palette.pick("fg", { "DiagnosticError" }, fg)),
+    warning = hex(palette.pick("fg", { "DiagnosticWarn" }, fg)),
+    info = hex(palette.pick("fg", { "DiagnosticInfo" }, fg)),
+    hint = hex(palette.pick("fg", { "DiagnosticHint" }, fg)),
+  }
+end
 
 local function gen()
-  local p = palettes[vim.o.background] or palettes.dark
+  local p = derive()
   local inact = { fg = p.inactive, bg = p.fill }
   local vis = { fg = p.visible, bg = p.bg }
   local sel = { fg = p.fg, bg = p.bg }
@@ -97,6 +107,12 @@ return {
     "akinsho/bufferline.nvim",
     opts = {
       highlights = gen,
+      options = {
+        -- LazyVim hides the tabline until a second buffer is open, which makes
+        -- the whole editor jump down a line the moment you open one. Always
+        -- showing it keeps the layout fixed.
+        always_show_bufferline = true,
+      },
     },
   },
 }
