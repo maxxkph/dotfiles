@@ -4,7 +4,8 @@
 --   frappe     lightest of the dark three
 --   macchiato  the default, mirrors home/.config/ghostty/themes/catppuccin-macchiato
 --   mocha      darkest
-local DARK = "macchiato"
+-- local DARK = "macchiato"
+local DARK = "mocha"
 local LIGHT = "latte"
 
 -- `colorscheme catppuccin` — no flavour suffix — resolves the flavour from
@@ -27,11 +28,11 @@ local function apply_overrides()
 		vim.api.nvim_set_hl(0, "Telescope" .. pane .. "Title", { fg = palette.mauve, bg = palette.base })
 	end
 
-	-- Hide all semantic highlights until upstream issues are resolved
-	-- (https://github.com/catppuccin/nvim/issues/480)
-	for _, group in ipairs(vim.fn.getcompletion("@lsp", "highlight")) do
-		vim.api.nvim_set_hl(0, group, {})
-	end
+	-- Upstream blanked every @lsp.* group here to hide LSP semantic highlights
+	-- (catppuccin/nvim#480). That backfires: an empty highlight still applies,
+	-- at semantic-token priority 125 over treesitter's 100, so comments lost
+	-- their colour entirely. Semantic tokens are switched off properly in
+	-- lua/plugins/lsp.lua instead, on LspAttach.
 end
 
 return {

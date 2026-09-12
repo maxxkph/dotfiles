@@ -1,61 +1,39 @@
-# dark  -> themes/catppuccin-macchiato (local; cursor-text + selection tweaked
-#          away from the bundled "Catppuccin Macchiato")
-# light -> Ghostty's bundled Catppuccin Latte
-#
-# Frappe and Mocha ship with Ghostty, so swapping the dark half is a one-line
-# change — but the bundled themes do NOT carry the two local tweaks above.
+# ==== THEME ====
+theme = light:Catppuccin Latte,dark:Catppuccin Mocha
 # theme = light:Catppuccin Latte,dark:Catppuccin Frappe
-# theme = light:Catppuccin Latte,dark:Catppuccin Mocha
-theme = light:Catppuccin Latte,dark:catppuccin-macchiato
-# font-family = GeistMono Nerd Font
-# font-family = TX-02
-font-family = DankMono Nerd Font
-# font-family = IBM Plex Mono
-# font-family = SF Mono Terminal
-# font-family = Menlo
-# font-family = Osaka
-# font-family = FiraCode Nerd Font
-# font-family = Iosevka Berkeley Mono
-# font-family = UbuntuMono Nerd Font Mono
+# theme = light:Catppuccin Latte,dark:Catppuccin Macchiato
+
+# ==== FONTS ====
+# font-family = Ioskeley Mono
+font-family = Osaka
 
 window-save-state = always
 
-font-size = 14
-font-thicken = true
-adjust-cell-height = 25%
+# ==== FONT CUSTOMIZATION ====
+font-size = 16
+font-thicken = false
+adjust-cell-height = 20%
 font-feature = liga=0, calt=0
 
-# window-colorspace = display-p3
-
-# window-padding-x = 4
-# window-padding-y = 4
-# window-padding-balance = false
-
-background-opacity = 1
-background-blur = false
-
+# ==== ALWAYS OPEN MAXIMIZED WINDOW ====
 maximize = true
 
-# macos-titlebar-style = hidden
+# ==== HIDE ANNOYING ICON IN TITLEBAR ====
 macos-titlebar-proxy-icon = hidden
 
+# ==== CURSOR & MOUSE SUPPORT ==== 
 cursor-style = block
-cursor-style-blink = true
-
+cursor-style-blink = false
 shell-integration-features = no-cursor
-
 mouse-hide-while-typing = true
 
+# ==== CUSTOM KEYS ====
 keybind = shift+enter=text:\n
 
-macos-option-as-alt = true
-
-# window-padding-color = extend
-
-# Better link handling
+# ==== BETTER LINK HANDLING ====
 link-url = true
 
-# App behavior
+# ==== APP BEHAVIOR ====
 app-notifications = no-clipboard-copy
 
 # macos-icon = blueprint

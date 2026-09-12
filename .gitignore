@@ -12,3 +12,6 @@
 
 # `dot install` records failed steps here for `dot retry-failed`
 .dot-state/
+
+# nvim persistent undo — machine-local state, never config
+.undodir/

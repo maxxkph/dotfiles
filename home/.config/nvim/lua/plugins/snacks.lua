@@ -10,6 +10,18 @@ return {
 		opts = {
 			bigfile = { enabled = true },
 			bufdelete = { enabled = true },
+			dashboard = {
+				enabled = true,
+				preset = {
+					header = [[
+      ╭─╮ ╭┬─╮╭──╮┬  ┬┬╭─┬─╮
+      │ │ ││  │  ││  │││ │ │
+      │ │ │├┤ │  ││  │││ │ │
+      │ │ ││  │  │╰┐┌╯││ │ │
+      ╯ ╰─╯╰─╯╰──╯ ╰╯ ┴┴   ┴
+      ]],
+				},
+			},
 			dim = { enabled = true },
 			gitbrowse = { enabled = true },
 			indent = { enabled = true },

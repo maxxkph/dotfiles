@@ -126,6 +126,20 @@ return {
 						return
 					end
 
+					-- Highlighting comes from treesitter, not LSP semantic tokens
+					-- (catppuccin's @lsp.* groups fight it — catppuccin/nvim#480).
+					--
+					-- They have to be switched off at the source. Blanking the
+					-- @lsp.* highlight groups does NOT work: an empty highlight
+					-- still applies, at semantic-token priority 125, and so wins
+					-- over treesitter's 100 — which left every comment rendering
+					-- as plain Normal instead of Comment.
+					local client = vim.lsp.get_client_by_id(event.data.client_id)
+					if client then
+						client.server_capabilities.semanticTokensProvider = nil
+						pcall(vim.lsp.semantic_tokens.stop, bufnr, client.id)
+					end
+
 					map_lsp_keybinds(bufnr)
 				end,
 			})
