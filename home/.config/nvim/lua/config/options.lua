@@ -7,6 +7,12 @@ vim.opt.smoothscroll = false
 vim.opt.spell = false
 vim.g.snacks_animate = false
 
+-- LazyVim defaults this on; conform.nvim reformats every buffer on save.
+vim.g.autoformat = false
+
+-- The line-length ruler, as seen in Dillon Mulroy's and ThePrimeagen's configs.
+-- vim.opt.colorcolumn = "120"
+
 -- Snacks indent guides and the git-diff highlights, derived from whatever
 -- colorscheme is active instead of from a hardcoded light/dark pair. Every
 -- value comes out of a group the theme defines itself, so this follows the
