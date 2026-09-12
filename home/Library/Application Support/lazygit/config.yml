@@ -12,3 +12,53 @@ git:
   pagers:
     - colorArg: always
       pager: delta-auto --paging=never
+
+os:
+  # Wires `e` to neovim, including opening at the line under the cursor rather
+  # than at the top of the file. $EDITOR is not set anywhere, so without this
+  # lazygit falls back to guessing.
+  editPreset: nvim
+
+gui:
+  # Icons render even though ghostty's font-family is Osaka, which is not a nerd
+  # font: ghostty falls back to "Symbols Nerd Font" for the glyphs.
+  nerdFontsVersion: "3"
+
+  # Ahead/behind counts against the base branch, in the branches view.
+  showDivergenceFromBaseBranch: arrowAndNumber
+
+  # Fuzzy rather than substring matching in the filter prompts.
+  filterMode: fuzzy
+
+  # The command log panel is more useful without the rotating tip line.
+  showRandomTip: false
+
+  # Colours are ANSI *names*, never hex. Those sixteen slots are defined by the
+  # terminal theme, so this follows ghostty's catppuccin light/dark switch for
+  # free. Hex would look right in frappe and wrong in latte -- the same trap as
+  # pinning delta with `dark = true`.
+  #
+  # Only entries that actually differ from lazygit's defaults are listed.
+  #
+  # Note an ANSI name is only safe as a *foreground*. ANSI black is dark in both
+  # flavours (#51576d frappe, #5c5f77 latte), so using it as a background gives
+  # a dark bar under dark text in light mode. `reverse` is the theme-adaptive
+  # answer -- it swaps whatever the current foreground and background are, and
+  # is what upstream documents for exactly this setting.
+  theme:
+    # Default is green; blue matches the border colour nvim uses for Telescope.
+    activeBorderColor:
+      - blue
+      - bold
+    # Default is cyan, which is hard to tell apart from the active border.
+    searchingActiveBorderColor:
+      - yellow
+      - bold
+    # Default is a solid blue background behind the selected line, which is loud
+    # in both flavours.
+    selectedLineBgColor:
+      - reverse
+
+update:
+  # Homebrew owns this install, so lazygit should not offer to update itself.
+  method: never
