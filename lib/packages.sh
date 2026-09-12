@@ -6,7 +6,7 @@ BREWFILE="$DOTFILES/packages/Brewfile"
 # The font is licensed, so it lives in a private repo rather than in here.
 # Every .otf/.ttf in that repo gets installed, so adding weights there needs no
 # change on this side.
-FONT_REPO="git@github.com:maxxkph/mono-lisa.git"
+FONT_REPO="git@github.com:maxxkph/fonts.git"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 
 # --------------------------------------------------------------- homebrew ----
