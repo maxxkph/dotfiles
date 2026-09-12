@@ -7,29 +7,106 @@ vim.opt.smoothscroll = false
 vim.opt.spell = false
 vim.g.snacks_animate = false
 
-vim.api.nvim_create_autocmd("ColorScheme", {
-  pattern = "*",
-  callback = function()
-    local light = vim.o.background == "light"
-    -- mellow (dark) values, and their maxx-mellow-dawn (light) counterparts
-    local indent = light and "#e2ded9" or "#262628"
-    local scope = light and "#cec9c1" or "#313134"
-    local line_nr = light and "#a8a3b0" or "#6c6874"
-    local diff_text = light and "#48454f" or "#c9c7cd"
-    local add_bg = light and "#d7e8dc" or "#1a2e22"
-    local del_bg = light and "#f0d9e0" or "#2e1a22"
+-- Snacks indent guides and the git-diff highlights, derived from whatever
+-- colorscheme is active instead of from a hardcoded light/dark pair. Every
+-- value comes out of a group the theme defines itself, so this follows the
+-- maxx-mellow <-> maxx-mellow-dawn swap and works on any other theme too.
 
-    vim.api.nvim_set_hl(0, "SnacksIndent", { fg = indent })
-    vim.api.nvim_set_hl(0, "SnacksIndentScope", { fg = scope })
-    vim.api.nvim_set_hl(0, "SnacksDiffContext", { link = "Normal" })
-    vim.api.nvim_set_hl(0, "SnacksDiffContextLineNr", { fg = line_nr })
-    -- Readable git diff: subtle tint + main text fg (syntax colors were unreadable on tinted bg)
-    vim.api.nvim_set_hl(0, "DiffAdd", { bg = add_bg, fg = diff_text })
-    vim.api.nvim_set_hl(0, "DiffDelete", { bg = del_bg, fg = diff_text })
-    vim.api.nvim_set_hl(0, "DiffChange", { link = "Normal" })
-    vim.api.nvim_set_hl(0, "SnacksDiffAdd", { bg = add_bg, fg = diff_text })
-    vim.api.nvim_set_hl(0, "SnacksDiffDelete", { bg = del_bg, fg = diff_text })
-    vim.api.nvim_set_hl(0, "SnacksDiffAddLineNr", { bg = add_bg, fg = line_nr })
-    vim.api.nvim_set_hl(0, "SnacksDiffDeleteLineNr", { bg = del_bg, fg = line_nr })
-  end,
+-- Indent guides sit between the editor background and the gutter grey.
+-- 0.30 / 0.57 reproduce the previously hand-picked values to within a shade
+-- in both flavours.
+local INDENT_MIX = 0.30
+local SCOPE_MIX = 0.57
+
+-- How far the add/delete accent is mixed into the editor background. The diff
+-- tint is always computed this way rather than taken from the theme's own
+-- DiffAdd/DiffDelete background: some themes (mellow, for one) set that to the
+-- accent at full strength, which is what made diff text unreadable in the first
+-- place. 0.20 is not arbitrary — oldworld's own diff backgrounds are exactly
+-- its accents at 0.20, in both flavours.
+local DIFF_MIX = 0.20
+
+-- Resolved highlight, or nil when the group is empty.
+local function hl(name)
+  local h = vim.api.nvim_get_hl(0, { name = name, link = false })
+  return (h and next(h)) and h or nil
+end
+
+-- First of `groups` that actually defines `key` ("fg" or "bg").
+local function pick(key, groups, fallback)
+  for _, name in ipairs(groups) do
+    local h = hl(name)
+    if h and h[key] then
+      return h[key]
+    end
+  end
+  return fallback
+end
+
+-- Mix `fg` into `bg` at `alpha` (0 = bg, 1 = fg). Both are 24-bit ints, which
+-- is what nvim_get_hl returns under termguicolors.
+local function blend(fg, bg, alpha)
+  local function channel(shift)
+    local a, b = math.floor(fg / shift) % 256, math.floor(bg / shift) % 256
+    return math.min(255, math.max(0, math.floor(b + (a - b) * alpha + 0.5)))
+  end
+  return channel(65536) * 65536 + channel(256) * 256 + channel(1)
+end
+
+-- Note that no group read here is a group written below. That keeps this
+-- idempotent: re-running it without a colorscheme reload cannot feed its own
+-- output back in and drift.
+local function apply_theme_highlights()
+  local normal = hl("Normal")
+  -- Nothing to derive from on a theme without an explicit Normal (terminal
+  -- default background); leave every group as the theme left it.
+  if not (normal and normal.fg and normal.bg) then
+    return
+  end
+  local fg, bg = normal.fg, normal.bg
+
+  local gutter = pick("fg", { "LineNr", "NonText", "Comment" }, fg)
+  local indent = blend(gutter, bg, INDENT_MIX)
+  local scope = blend(gutter, bg, SCOPE_MIX)
+
+  -- The diff line numbers read as muted-but-present, which is what NonText is
+  -- for; it was already the exact value used here by hand in both flavours.
+  local line_nr = pick("fg", { "NonText", "Whitespace", "LineNr" }, gutter)
+
+  -- Subtle tint in the theme's own add/delete hue, with Normal's foreground on
+  -- top: the theme's syntax colours are unreadable against a tinted background,
+  -- so only the background carries the add/delete signal.
+  --
+  -- `diffAdded`/`GitSignsAdd` are theme-chosen; `Added`/`Removed` are last
+  -- resorts because Neovim ships defaults for them, so a theme that never
+  -- touches them still reports a colour that has nothing to do with its palette.
+  local add = pick("fg", { "diffAdded", "GitSignsAdd", "Added", "String" }, fg)
+  local del = pick("fg", { "diffRemoved", "GitSignsDelete", "Removed", "ErrorMsg" }, fg)
+  local add_bg = blend(add, bg, DIFF_MIX)
+  local del_bg = blend(del, bg, DIFF_MIX)
+
+  local set = vim.api.nvim_set_hl
+  set(0, "SnacksIndent", { fg = indent })
+  set(0, "SnacksIndentScope", { fg = scope })
+  set(0, "SnacksDiffContext", { link = "Normal" })
+  set(0, "SnacksDiffContextLineNr", { fg = line_nr })
+  set(0, "DiffAdd", { bg = add_bg, fg = fg })
+  set(0, "DiffDelete", { bg = del_bg, fg = fg })
+  set(0, "DiffChange", { link = "Normal" })
+  set(0, "SnacksDiffAdd", { bg = add_bg, fg = fg })
+  set(0, "SnacksDiffDelete", { bg = del_bg, fg = fg })
+  set(0, "SnacksDiffAddLineNr", { bg = add_bg, fg = line_nr })
+  set(0, "SnacksDiffDeleteLineNr", { bg = del_bg, fg = line_nr })
+end
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("maxx-theme-highlights", { clear = true }),
+  pattern = "*",
+  callback = apply_theme_highlights,
 })
+
+-- ColorScheme has usually already fired by the time anything reads these, but
+-- not if a colorscheme was set before this file loaded.
+if vim.g.colors_name then
+  apply_theme_highlights()
+end
