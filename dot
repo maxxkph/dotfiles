@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+# dot — set up and maintain this machine from ~/dotfiles. macOS only.
+#
+# Remote (nothing cloned yet):
+#   curl -fsSL https://raw.githubusercontent.com/maxxkph/dotfiles/main/dot | bash -s -- install
+#
+# Local:
+#   ~/dotfiles/dot install          # packages, fonts, links
+#   ~/dotfiles/dot doctor           # what is wired up, what is not
+#   ~/dotfiles/dot --dry-run link   # preview any command
+#
+# Every command takes --dry-run (or DRY_RUN=1) and changes nothing when given.
+
+set -euo pipefail
+
+REPO_URL="https://github.com/maxxkph/dotfiles.git"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
+
+# ------------------------------------------------------------- bootstrap ----
+# Piped from curl there is no checkout — install git, clone, re-exec from disk.
+
+SELF="${BASH_SOURCE[0]:-}"
+if [[ -z "$SELF" || ! -f "$SELF" || ! -d "$(dirname "$SELF")/lib" ]]; then
+  printf '\033[34m::\033[0m bootstrapping into %s\n' "$DOTFILES_DIR"
+  if ! command -v git >/dev/null 2>&1; then
+    xcode-select --install || true
+    printf '\033[33m !!\033[0m finish the Command Line Tools install, then re-run\n'
+    exit 1
+  fi
+  if [[ -d "$DOTFILES_DIR/.git" ]]; then
+    git -C "$DOTFILES_DIR" pull --ff-only
+  else
+    git clone "$REPO_URL" "$DOTFILES_DIR"
+  fi
+  exec bash "$DOTFILES_DIR/dot" "$@"
+fi
+
+[[ "${OSTYPE:-}" == darwin* ]] || {
+  printf '\033[31m ✗\033[0m this setup is macOS only (OSTYPE=%s)\n' "${OSTYPE:-unknown}" >&2
+  exit 1
+}
+
+DOTFILES="$(cd "$(dirname "$SELF")" && pwd)"
+export DOTFILES
+
+source "$DOTFILES/lib/common.sh"
+source "$DOTFILES/lib/stow.sh"
+source "$DOTFILES/lib/packages.sh"
+source "$DOTFILES/lib/setup.sh"
+source "$DOTFILES/lib/doctor.sh"
+
+# ----------------------------------------------------------------- usage ----
+
+usage() {
+  cat <<'USAGE'
+dot — dotfiles for macOS
+
+Setup
+  dot install [--work]   run every step below, in order
+  dot retry-failed       re-run only the steps that failed last time
+  dot gen-ssh-key [mail] create an SSH key and add it to GitHub
+  dot link               stow the configs into place (idempotent)
+  dot unlink             remove the symlinks stow created
+  dot relink             unlink + link — use after moving files in the repo
+  dot fonts              fetch the private font repo over SSH and install it
+
+Packages
+  dot packages [--work]  install from packages/Brewfile
+  dot packages --dump    rewrite packages/Brewfile from what is installed
+  dot package-add <name> [--cask|--tap|--npm]
+  dot package-remove <name>
+  dot package-list       what the Brewfile holds
+  dot check-packages     drift between the Brewfile and what is installed
+
+Maintenance
+  dot doctor             health check — links, tools, fonts, backups, repo
+  dot update             git pull, then packages + relink
+  dot revert             unlink and restore the backups install made
+  dot cleanup            delete backups, where linking succeeded
+  dot benchmark-shell [n]  time zsh startup over n runs (default 10)
+  dot edit               open the repo in $EDITOR
+  dot completions        print a zsh completion for dot
+  dot help               this
+
+Options
+  --dry-run              print what would happen, change nothing
+USAGE
+}
+
+# ------------------------------------------------------- install registry ----
+# One table drives both `install` and `retry-failed`. Fields are ;;-separated:
+#   label ;; function ;; required   ("true" aborts the run on failure)
+# Order matters — steps run top to bottom.
+
+install_steps() {
+  printf '%s\n' \
+    "Homebrew          ;; do_homebrew    ;; true" \
+    "Brewfile packages ;; do_packages    ;; true" \
+    "Stow configs      ;; do_link        ;; true" \
+    "SSH key           ;; do_gen_ssh_key ;; false" \
+    "MonoLisa font     ;; do_fonts       ;; false"
+}
+
+# run_steps [filter-fn ...] — run the registry, recording what failed. With
+# arguments, only those step functions run.
+run_steps() {
+  local only=" $* " entry label fn required failures=0
+  while IFS= read -r entry; do
+    label="$( printf '%s' "$entry" | awk -F';;' '{print $1}' | xargs)"
+    fn="$(    printf '%s' "$entry" | awk -F';;' '{print $2}' | xargs)"
+    required="$(printf '%s' "$entry" | awk -F';;' '{print $3}' | xargs)"
+    [[ $# -gt 0 && "$only" != *" $fn "* ]] && continue
+
+    if "$fn"; then
+      continue
+    fi
+    failures=$((failures + 1))
+    state_record "$fn"
+    if [[ "$required" == "true" ]]; then
+      die "$label failed — fix it and re-run 'dot install'"
+    fi
+    warn "$label failed — recorded; 'dot retry-failed' will retry it"
+  done < <(install_steps)
+  return $(( failures > 0 ))
+}
+
+# --------------------------------------------------------------- dispatch ---
+
+CMD=""; ARGS=(); WORK=""; DUMP=""; KIND=""
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)  DRY_RUN=1 ;;
+    --work)     WORK="--work" ;;
+    --dump)     DUMP=1 ;;
+    -h|--help)  CMD="help" ;;
+    # Kept out of ARGS so the flag works on either side of the package name.
+    --brew|--cask|--tap|--npm) KIND="$arg" ;;
+    -*)         die "unknown option: $arg" ;;
+    *)          if [[ -z "$CMD" ]]; then CMD="$arg"; else ARGS+=("$arg"); fi ;;
+  esac
+done
+export DRY_RUN
+
+# ${ARGS[@]} on an empty array trips `set -u` in bash 3.2, which is what macOS
+# ships — hence the guarded expansions below.
+arg1() { [[ ${#ARGS[@]} -gt 0 ]] && printf '%s' "${ARGS[0]}" || true; }
+arg2() { [[ ${#ARGS[@]} -gt 1 ]] && printf '%s' "${ARGS[1]}" || true; }
+
+case "${CMD:-help}" in
+  install)
+    info "Installing${DRY_RUN:+  (dry run)}"
+    state_reset
+    run_steps || true
+    bold "Done. 'dot doctor' to verify."
+    ;;
+  retry-failed)
+    failed="$(state_failed)"
+    [[ -n "$failed" ]] || { bold "Nothing recorded as failed."; exit 0; }
+    info "Retrying: $(printf '%s' "$failed" | tr '\n' ' ')"
+    state_reset
+    # shellcheck disable=SC2086
+    run_steps $failed || true
+    ;;
+
+  gen-ssh-key)     do_gen_ssh_key "$(arg1)" ;;
+  link)            do_link ;;
+  unlink)          do_unlink ;;
+  relink)          do_unlink; do_link ;;
+  fonts)           do_fonts ;;
+
+  packages)
+    if [[ -n "$DUMP" ]]; then do_packages_dump; else do_packages "$WORK"; fi ;;
+  package-add)     do_package_add "$(arg1)" "${KIND:---brew}" ;;
+  package-remove)  do_package_remove "$(arg1)" ;;
+  package-list)    do_package_list ;;
+  check-packages)  do_check_packages ;;
+
+  doctor)          do_doctor ;;
+  update)
+    bold "Updating repo"
+    run git -C "$DOTFILES" pull --ff-only
+    do_packages "$WORK"
+    do_unlink; do_link
+    ;;
+  revert)
+    info "Reverting${DRY_RUN:+  (dry run)}"
+    do_restore
+    do_fonts_remove
+    warn "packages left in place — 'brew bundle cleanup --file=packages/Brewfile' to prune"
+    ;;
+  cleanup)         do_cleanup ;;
+  benchmark-shell) do_benchmark_shell "$(arg1)" ;;
+  edit)            do_edit ;;
+  completions)     do_completions ;;
+  help)            usage ;;
+  *)               warn "unknown command: $CMD"; echo; usage; exit 1 ;;
+esac

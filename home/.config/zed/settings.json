@@ -1,0 +1,272 @@
+{
+  "ui_font_size": 14.0,
+  "buffer_font_size": 13.0,
+  "ui_font_family": ".SystemUIFont",
+  "confirm_quit": true,
+  "buffer_font_weight": 400.0,
+  "ui_font_weight": 400.0,
+  "git_commit_buffer_font_size": 11,
+  "tabs": {
+    "git_status": false,
+    "file_icons": false,
+  },
+  "lsp_document_colors": "background",
+  // ==================== FONTS ====================
+  "completion_detail_alignment": "right",
+  "snippet_sort_order": "bottom",
+  "completions": {
+    "words": "enabled",
+  },
+  "completion_menu_item_kind": "symbol",
+  "show_completion_documentation": false,
+  "buffer_font_features": {
+    "calt": false, // Contextual Alternates (ligatures)
+    "liga": false, // Standard Ligatures
+  },
+  "tab_bar": {
+    "show_pinned_tabs_in_separate_row": false,
+    "show_tab_bar_buttons": false,
+    "show_nav_history_buttons": false,
+  },
+  "cli_default_open_behavior": "new_window",
+  "collaboration_panel": {
+    "dock": "left",
+  },
+  "show_edit_predictions": true,
+  "agent_servers": {
+    "cursor": {
+      "type": "registry",
+    },
+    "claude-acp": {
+      "default_config_options": {
+        "mode": "auto",
+        "model": "opus[1m]",
+      },
+      "type": "registry",
+    },
+    "opencode": {
+      "type": "registry",
+    },
+  },
+  "base_keymap": "VSCode",
+  "outline_panel": {
+    "dock": "left",
+    "git_status": true,
+  },
+  "terminal": {
+    "font_size": 14.0,
+    "default_height": 360.0,
+    "line_height": "comfortable",
+  },
+  "zoomed_padding": true,
+  "status_bar": {
+    "active_language_button": true,
+  },
+  "prettier": {
+    "allowed": true,
+  },
+  "toolbar": {
+    "code_actions": true,
+  },
+  "expand_excerpt_lines": 20,
+  "double_click_in_multibuffer": "select",
+  "diff_view_style": "split",
+  "show_wrap_guides": true,
+  "unstable.ui_density": "compact",
+  "session": {
+    "trust_all_worktrees": true,
+  },
+  "theme": {
+    "mode": "system",
+    "light": "Flexoki Light",
+    "dark": "Tomorrow Night",
+  },
+  // ==================== THEME ====================
+  "icon_theme": {
+    "mode": "light",
+    "light": "Light Charmed Icons",
+    "dark": "JetBrains Icons Dark",
+  },
+  "theme_overrides": {
+    "Tokyo Night": {
+      "terminal.foreground": "#C0CAF5",
+      "terminal.background": "#1A1B26",
+      "tab.active_background": "#1A1B26",
+      "toolbar.background": "#1A1B26",
+      "element.hover": "#282E44",
+      "element.selected": "#282E44",
+      "ghost_element.hover": "#282E44",
+      "ghost_element.selected": "#282E44",
+      "icon.placeholder": "#282E44",
+      "panel.indent_guide": "#282E44",
+      "panel.indent_guide_active": "#565f8988",
+      "panel.indent_guide_hover": "#282E44",
+      "editor.indent_guide": "#282E44",
+      "editor.indent_guide_active": "#565f8988",
+      "players": [{ "cursor": "#eee" }],
+    },
+    "Kanagawa Wave - No Italics": {
+      "border.variant": "#2A2A37",
+    },
+    "Vesper": {
+      "border": "#202020",
+      "border.variant": "#191919",
+    },
+    "One Dark": {
+      "elevated_surface.background": "#1E2227",
+      "surface.background": "#1E2227",
+      "background": "#1E2227",
+      "status_bar.background": "#1E2227",
+      "title_bar.background": "#1E2227",
+      "tab_bar.background": "#1E2227",
+      "tab.inactive_background": "#1E2227",
+      "panel.background": "#1E2227",
+      "editor.subheader.background": "#1E2227",
+      "editor.highlighted_line.background": "#1E2227",
+      "panel.overlay_background": "#1E2227",
+      "panel.overlay_hover": "#1E2227",
+      "toolbar.background": "#23272D",
+      "editor.background": "#23272D",
+      "editor.gutter.background": "#23272D",
+      "tab.active_background": "#23272D",
+      "terminal.background": "#23272D",
+      // border
+      "border": "#3A3F4Daa",
+      "border.variant": "#2F3339",
+    },
+    "Catppuccin Mocha - No Italics": {
+      "border": "#313244CF",
+      "border.variant": "#313244CF",
+      "status_bar.background": "#181825",
+      "title_bar.background": "#181825",
+      "tab_bar.background": "#181825",
+      "tab.inactive_background": "#181825",
+    },
+    "Catppuccin Frappé - No Italics": {
+      "border.variant": "#414559",
+    },
+    "Tomorrow Night": {
+      "terminal.foreground": "#C5C8C6",
+      // "terminal.background": "#191919",
+      // "editor.background": "#191919",
+      // "editor.gutter.background": "#191919",
+      "conflict": "#f5a97f",
+      "conflict.border": "#f5a97f",
+      "conflict.background": "#f5a97f26",
+      "version_control.conflict_marker.ours": "#2E202E",
+      "version_control.conflict_marker.theirs": "#262935",
+    },
+    "GitHub Dark Dimmed": {
+      "border.variant": "#30363D",
+      "border": "#30363D",
+      "players": [{ "cursor": "#fff" }],
+    },
+    "Rosé Pine": {
+      "ghost_element.background": "#191724",
+    },
+    "Flexoki Dark": {
+      // "editor.background": "#151413",
+      // "toolbar.background": "#151413",
+      // "editor.gutter.background": "#151413",
+      // "tab.active_background": "#151413",
+      // "terminal.background": "#151413",
+      "players": [{ "cursor": "#fff" }],
+    },
+  },
+  "experimental.theme_overrides": {
+    "editor.document_highlight.read_background": "#00000000",
+    "editor.document_highlight.write_background": "#00000000",
+  },
+  // ==================== EDITOR ====================
+  "diagnostics": {
+    "inline": {
+      "enabled": true,
+    },
+  },
+  "tab_size": 2,
+  "soft_wrap": "editor_width",
+  "show_whitespaces": "none",
+  "relative_line_numbers": "enabled",
+  "vertical_scroll_margin": 10.0,
+  "cursor_blink": false,
+  "selection_highlight": false,
+  "extend_comment_on_newline": false,
+  "format_on_save": "on",
+  // ==================== FILE / SESSION ====================
+  "restore_on_startup": "last_session",
+  "restore_on_file_reopen": false,
+  "close_on_file_delete": true,
+  // ==================== NAVIGATION / UI ====================
+  "title_bar": {
+    "show_sign_in": true,
+    "show_menus": false,
+  },
+  "project_panel": {
+    "hide_gitignore": false,
+    "git_status": true,
+    "git_status_indicator": true,
+    "dock": "left",
+    "entry_spacing": "comfortable",
+    "button": true,
+    "starts_open": false,
+    "auto_fold_dirs": false,
+    "hide_root": true,
+  },
+  "scrollbar": {
+    "git_diff": false,
+  },
+  "gutter": {},
+  "which_key": {
+    "enabled": true,
+    "delay_ms": 0,
+  },
+  // ==================== GIT ====================
+  "git_panel": {
+    "group_by": "staging",
+    "dock": "left",
+    "button": true,
+    "sort_by_path": true,
+    "diff_stats": true,
+    "folder_icons": false,
+    "collapse_untracked_diff": false,
+    "file_icons": true,
+    "status_style": "label_color",
+    "tree_view": true,
+    "show_count_badge": true,
+  },
+  "git": {
+    "hunk_style": "unstaged_hollow",
+    "disable_git": false,
+    "inline_blame": {
+      "delay_ms": 1000,
+    },
+  },
+  // ==================== SEARCH ====================
+  "seed_search_query_from_cursor": "selection",
+  // ==================== AI / AGENT ====================
+  "agent": {
+    "flexible": false,
+    "play_sound_when_agent_done": "when_hidden",
+    "sidebar_side": "right",
+    "dock": "right",
+    "default_model": {
+      "effort": "high",
+      "provider": "zed.dev",
+      "model": "claude-sonnet-4-6",
+      "enable_thinking": true,
+    },
+    "favorite_models": [],
+    "model_parameters": [],
+  },
+  "edit_predictions": {
+    "provider": "zed",
+    "mode": "eager",
+  },
+  // ==================== TELEMETRY ====================
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false,
+  },
+  // ==================== MODES ====================
+  "vim_mode": true,
+}

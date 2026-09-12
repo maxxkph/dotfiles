@@ -1,0 +1,14 @@
+{
+  "attribution": {
+    "commit": ""
+  },
+  "model": "opus",
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  },
+  "theme": "auto"
+}

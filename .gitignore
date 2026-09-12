@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# editor / tool scratch
+*.swp
+*~
+
+# install-time backups (dot link leaves these next to the original)
+*.bak
+*.bak-*
+
+# `dot install` records failed steps here for `dot retry-failed`
+.dot-state/
