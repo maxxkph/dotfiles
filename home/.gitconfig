@@ -9,3 +9,68 @@
 
 [alias]
 	mlog = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all
+
+# ----------------------------------------------------------------- delta ----
+#
+# delta (https://github.com/dandavison/delta) as the pager for diffs: syntax
+# highlighting, line numbers, and word-level emphasis within a changed line.
+#
+# The feature is resolved per invocation from the macOS appearance, so diffs
+# follow the same light/dark switch as ghostty and nvim. delta 0.19 can detect
+# that itself via --detect-dark-light, but that only governs its own built-in
+# palette -- naming the catppuccin feature explicitly is what keeps git in step
+# with the editor. The `defaults read` costs about 6ms.
+#
+# The plus/minus backgrounds are the theme's green/red mixed into its base at
+# 0.20, which is exactly what lua/config/options.lua derives for DiffAdd and
+# DiffDelete in nvim. A diff therefore renders identically in the pager and in
+# the editor.
+[core]
+	pager = delta --features=$(defaults read -g AppleInterfaceStyle >/dev/null 2>&1 && echo catppuccin-frappe || echo catppuccin-latte)
+
+[interactive]
+	diffFilter = delta --color-only --features=$(defaults read -g AppleInterfaceStyle >/dev/null 2>&1 && echo catppuccin-frappe || echo catppuccin-latte)
+
+[delta]
+	navigate = true
+	line-numbers = true
+	hyperlinks = false
+
+[delta "catppuccin-frappe"]
+	syntax-theme = Catppuccin Frappe
+	plus-style = syntax "#485353"
+	plus-emph-style = syntax "#5f7361"
+	minus-style = syntax "#554452"
+	minus-emph-style = syntax "#79535f"
+	line-numbers-plus-style = "#a6d189"
+	line-numbers-minus-style = "#e78284"
+	line-numbers-zero-style = "#737994"
+	line-numbers-left-style = "#51576d"
+	line-numbers-right-style = "#51576d"
+	file-style = bold "#8caaee"
+	file-decoration-style = "#51576d" ul
+	hunk-header-style = file line-number syntax
+	hunk-header-decoration-style = "#51576d" box
+	blame-palette = "#303446" "#292c3c" "#232634" "#414559"
+
+[delta "catppuccin-latte"]
+	syntax-theme = Catppuccin Latte
+	plus-style = syntax "#cce1cd"
+	plus-emph-style = syntax "#a9d1a4"
+	minus-style = syntax "#e9c4cf"
+	minus-emph-style = syntax "#e397aa"
+	line-numbers-plus-style = "#40a02b"
+	line-numbers-minus-style = "#d20f39"
+	line-numbers-zero-style = "#9ca0b0"
+	line-numbers-left-style = "#bcc0cc"
+	line-numbers-right-style = "#bcc0cc"
+	file-style = bold "#1e66f5"
+	file-decoration-style = "#bcc0cc" ul
+	hunk-header-style = file line-number syntax
+	hunk-header-decoration-style = "#bcc0cc" box
+	blame-palette = "#eff1f5" "#e6e9ef" "#dce0e8" "#ccd0da"
+
+# zdiff3 keeps the common ancestor's version in a conflict, which makes it far
+# easier to see what each side actually changed.
+[merge]
+	conflictstyle = zdiff3

@@ -12,6 +12,8 @@ brew "fzf"
 brew "gcc"
 # GitHub command-line tool
 brew "gh"
+# Syntax-highlighting pager for git diffs (wired up in home/.gitconfig)
+brew "git-delta"
 # Modern load testing tool, using Go and JavaScript
 brew "k6"
 # Simple terminal UI for git commands
