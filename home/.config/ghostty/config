@@ -6,6 +6,7 @@ theme = light:Catppuccin Latte,dark:Catppuccin Frappe
 # ==== FONTS ====
 # font-family = Ioskeley Mono
 font-family = Osaka
+# font-family = CaskaydiaCove Nerd Font
 
 window-save-state = always
 
