@@ -16,8 +16,6 @@ brew "gh"
 brew "k6"
 # Simple terminal UI for git commands
 brew "lazygit"
-# Simple tool to make locally trusted development certificates
-brew "mkcert"
 # Deep clean and optimize your Mac
 brew "mole"
 # Ambitious Vim-fork focused on extensibility and agility
@@ -34,14 +32,10 @@ brew "redis"
 brew "ripgrep"
 # Cross-shell prompt (initialised in home/.zshrc)
 brew "starship"
-# Symlink farm manager Ã¢ÂÂ `dot link` uses this
+# Symlink farm manager - `dot link` uses this
 brew "stow"
-# Postgres development platform
-brew "supabase"
 # Terminal multiplexer
 brew "tmux"
-# Tmux session manager. Built on libtmux
-brew "tmuxp"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Utilities to create and convert Web Open Font File (WOFF) files
@@ -50,23 +44,14 @@ brew "woff2"
 cask "brave-browser"
 # Terminal-based AI coding assistant
 cask "claude-code@latest"
-# AI-powered database and data management tool
-cask "conar"
-# Write, edit, and chat about your code with AI
-cask "cursor"
 # Universal database tool and SQL client
 cask "dbeaver-community"
 # App to build and share containerised applications and microservices
 cask "docker-desktop"
-# Web browser
-cask "firefox"
-cask "font-blex-mono-nerd-font"
 cask "font-fira-code-nerd-font"
 cask "font-geist-mono-nerd-font"
 cask "font-ibm-plex-mono"
 cask "font-jetbrains-mono"
-cask "font-ubuntu-mono"
-cask "font-ubuntu-mono-nerd-font"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Web browser
@@ -77,40 +62,16 @@ cask "ngrok"
 cask "obs"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
-# AI coding agent desktop client
-cask "opencode-desktop"
-# Administration and development platform for PostgreSQL
-cask "pgadmin4"
-# Code snippets, screenshots and workflow context
-cask "pieces"
-# Local datastore, server, and ML engine powering the Pieces for Developers Suite
-cask "pieces-os"
 # Collaboration platform for API development
 cask "postman"
 # Control your tools with a few keystrokes
 cask "raycast"
-# GUI for streamlined Redis application development
-cask "redis-insight"
-# Plugin for AWS CLI to start and end sessions that connect to managed instances
-cask "session-manager-plugin"
-# Team communication and collaboration software
-cask "slack"
-# Music streaming service
-cask "spotify"
 # System monitor for the menu bar
 cask "stats"
-# Open-source code editor
-cask "visual-studio-code"
-# Native desktop client for WhatsApp
-cask "whatsapp"
 # Multiplayer code editor
 cask "zed"
-# Gecko based web browser
-cask "zen"
 # tsserver fallback for typescript-tools.nvim outside a project with a local copy
 npm "typescript"
-npm "@vscode/vsce"
 npm "corepack"
 npm "generator-code"
 npm "yarn"
-npm "yo"
