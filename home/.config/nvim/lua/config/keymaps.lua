@@ -30,10 +30,13 @@ vim.keymap.set("n", "<S-Tab>", "<cmd>bprevious<cr>", { desc = "Previous buffer" 
 vim.keymap.set("i", "jj", "<esc>", { desc = "Exit insert mode" })
 vim.keymap.set("i", "JJ", "<esc>", { desc = "Exit insert mode" })
 
--- Line ends in visual mode. Normal-mode L/H stay as LazyVim's buffer
--- navigation.
+-- Line ends. This takes over LazyVim's <S-h>/<S-l> buffer navigation, which
+-- Tab/Shift-Tab above replaces; [b and ]b are still there as well.
+vim.keymap.set({ "n", "v" }, "H", "^", { desc = "Jump to beginning of line" })
+vim.keymap.set("n", "L", "$", { desc = "Jump to end of line" })
+-- One short of the newline in visual, so the selection stops at the last
+-- character rather than wrapping.
 vim.keymap.set("v", "L", "$<left>", { desc = "Jump to end of line" })
-vim.keymap.set("v", "H", "^", { desc = "Jump to beginning of line" })
 
 -- Move the selected block, keeping it selected and reindented
 vim.keymap.set("v", "<A-j>", ":m '>+1<cr>gv=gv", { desc = "Move selection down" })
