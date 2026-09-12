@@ -29,11 +29,11 @@ return {
       update_interval = 3000,
       set_dark_mode = function()
         vim.o.background = "dark"
-        vim.cmd.colorscheme("maxx-mellow")
+        vim.cmd.colorscheme("catppuccin-frappe")
       end,
       set_light_mode = function()
         vim.o.background = "light"
-        vim.cmd.colorscheme("maxx-mellow-dawn")
+        vim.cmd.colorscheme("catppuccin-latte")
       end,
     },
   },
