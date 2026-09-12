@@ -69,7 +69,7 @@ lib/
 home/                the stow package -> ~
   .claude/           settings.json, statusline.sh, themes/ (6)
   .config/
-    ghostty/         config + themes/catppuccin-macchiato
+    ghostty/         config (themes come from Ghostty's bundled Catppuccin set)
     nvim/            lazy.nvim, lua/maxxkph/ + 34 plugin specs
     zed/             settings.json, keymap.json
   .gitconfig
@@ -124,24 +124,20 @@ Catppuccin. **Latte** is the only light flavour; **frappé**, **macchiato** and
 
 | | dark | light | how |
 |---|---|---|---|
-| ghostty | `catppuccin-macchiato` (local) | `Catppuccin Latte` (bundled) | native `theme = light:…,dark:…` |
-| nvim | macchiato | latte | `auto-dark-mode.nvim` flips `vim.o.background` |
+| ghostty | `Catppuccin Mocha` (bundled) | `Catppuccin Latte` (bundled) | native `theme = light:…,dark:…` |
+| nvim | mocha | latte | `auto-dark-mode.nvim` flips `vim.o.background` |
 | Claude Code | 4 flavours available | | set in `.claude/settings.json` |
 | tmux | — | — | inherits the terminal (`bg=default,fg=default`) |
 
 **Switching the dark flavour** is one line per tool:
 
 - ghostty — uncomment one of the alternatives at the top of
-  `home/.config/ghostty/config`. Frappé and Mocha ship with Ghostty, but the bundled
-  themes do **not** carry the two local tweaks (see below).
+  `home/.config/ghostty/config`. All four flavours ship with Ghostty, so there is
+  nothing to install.
 - nvim — change `DARK` at the top of `lua/plugins/color-scheme.lua`.
 - Claude Code — `/theme`, or set `"theme": "custom:catppuccin-mocha"` in
   `.claude/settings.json`. It takes a single string, so it cannot auto-switch between
   two custom themes; `"auto"` uses its own built-ins instead.
-
-**ghostty's dark theme is a local file** because it differs from the bundled
-"Catppuccin Macchiato" in two values — `cursor-text` uses crust `#181926` rather than
-base, and `selection-background` is `#3a3e53` rather than surface2 `#5b6078`.
 
 **nvim uses `colorscheme catppuccin` with no flavour suffix**, so the flavour is
 resolved from `vim.o.background`. Naming `catppuccin-macchiato` would pin it and break
@@ -163,16 +159,19 @@ dot gen-ssh-key      # once, on a new machine
 dot fonts
 ```
 
-Family name for configs: **`MonoLisa Nerd Font Mono`**.
+Family names for configs: **`MonoLisa Nerd Font Mono`** and **`Osaka`**.
 
 It needs `~/.ssh/id_ed25519` to exist and be registered with GitHub, which is what
 `dot gen-ssh-key` sets up (it also writes a `github.com` block into `~/.ssh/config`
 with `UseKeychain`, and copies the public key to the clipboard). Without a key,
 `dot fonts` warns and skips rather than failing the whole install.
 
-Nothing in the tracked configs selects this font yet — ghostty uses `IBM Plex Mono`,
-and zed has no working `buffer_font_family` since `SF Mono Terminal` went away with
-the vendored fonts.
+ghostty uses `Osaka` from this repo. Note that `Osaka` does not appear in
+`ghostty +list-fonts`, because that listing only surfaces families flagged monospace
+and this face is not (`post.isFixedPitch = 0`) — naming it explicitly still resolves,
+which `ghostty +show-face --string=A` confirms.
+
+zed deliberately sets no `buffer_font_family` and falls back to its own default.
 
 ## Packages
 

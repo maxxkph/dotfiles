@@ -2,7 +2,7 @@
 -- whole editor; latte is the only light flavour, so LIGHT has no alternatives.
 --
 --   frappe     lightest of the dark three
---   macchiato  the default, mirrors home/.config/ghostty/themes/catppuccin-macchiato
+--   macchiato  mirrors ghostty's bundled "Catppuccin Macchiato"
 --   mocha      darkest
 -- local DARK = "macchiato"
 local DARK = "mocha"
@@ -81,7 +81,7 @@ return {
 
 	-- Flips vim.o.background with the OS, then re-runs the colorscheme so
 	-- catppuccin picks up the other flavour. Keeps nvim in step with ghostty's
-	-- `theme = light:Catppuccin Latte,dark:catppuccin-macchiato`.
+	-- `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`.
 	{
 		"f-person/auto-dark-mode.nvim",
 		lazy = false,
