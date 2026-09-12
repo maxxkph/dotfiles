@@ -15,11 +15,19 @@ return {
   },
 
   -- Baseline colorscheme; auto-dark-mode swaps it per OS appearance.
-  -- dark  -> maxx-mellow       (nvim/colors/maxx-mellow.lua, aliases oldworld's dark palette)
-  -- light -> maxx-mellow-dawn  (nvim/colors/maxx-mellow-dawn.lua)
+  -- dark  -> catppuccin-frappe  (matches ghostty's `dark:Catppuccin Frappe`)
+  -- light -> catppuccin-latte
+  --
+  -- This has to agree with the auto-dark-mode callbacks below: LazyVim applies
+  -- it at startup, before auto-dark-mode's first poll, so naming a different
+  -- colorscheme here shows that one briefly and then swaps.
+  --
+  -- oldworld and mellow are still installed and colors/maxx-mellow{,-dawn}.lua
+  -- still alias them, so going back is a change to this line and the two
+  -- callbacks.
   {
     "LazyVim/LazyVim",
-    opts = { colorscheme = "maxx-mellow" },
+    opts = { colorscheme = "catppuccin-frappe" },
   },
   {
     "f-person/auto-dark-mode.nvim",

@@ -110,7 +110,8 @@ do_check_packages() {
   #     dependencies are not reported as things you forgot to write down;
   #   listed-but-missing     -> `brew list --formula`, because a formula can be
   #     installed as another package's dependency and so never appear in
-  #     `leaves` (tmux arrives via tmuxp, for one).
+  #     `leaves` -- tmux is one here, pulled in by something else rather than
+  #     requested directly.
   local only_installed only_file
   only_installed="$(comm -13 \
     <(grep '^brew "' "$BREWFILE" | sed 's/^brew "//; s/"$//' | sort -u) \

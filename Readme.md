@@ -67,11 +67,16 @@ lib/
   doctor.sh          health check
 
 home/                the stow package -> ~
-  .claude/           settings.json, statusline.sh, themes/ (6)
+  .claude/           settings.json, statusline.sh, themes/ (4)
   .config/
     ghostty/         config (themes come from Ghostty's bundled Catppuccin set)
     nvim/            LazyVim + lua/config, lua/plugins, colors/
     zed/             settings.json, keymap.json
+  .local/bin/
+    delta-auto       delta, with the flavour picked from the OS appearance
+  Library/
+    Application Support/
+      lazygit/       config.yml -- where lazygit looks on macOS
   .gitconfig
   .tmux.conf
   .zshrc
@@ -119,38 +124,45 @@ inside `home/.config/nvim`.
 
 ## Themes
 
-Two palettes, split by tool. Terminal and Claude Code run **Catppuccin**; nvim runs
-**maxx-mellow**, a local colorscheme built on `oldworld.nvim`. Both follow the OS
-appearance, so a light/dark flip moves everything at once.
+Catppuccin everywhere, following the macOS appearance: **Frappé** when the system
+is dark, **Latte** when it is light. Every tool switches on its own, so there is
+nothing to run when the appearance changes.
 
 | | dark | light | how |
 |---|---|---|---|
-| ghostty | `Catppuccin Mocha` (bundled) | `Catppuccin Latte` (bundled) | native `theme = light:…,dark:…` |
-| nvim | `maxx-mellow` | `maxx-mellow-dawn` | `auto-dark-mode.nvim` swaps the colorscheme |
-| Claude Code | catppuccin ×4 + the maxx-mellow pair | | set in `.claude/settings.json` |
+| ghostty | `Catppuccin Frappe` | `Catppuccin Latte` | native `theme = light:…,dark:…` |
+| nvim | `catppuccin-frappe` | `catppuccin-latte` | `auto-dark-mode.nvim` swaps the colorscheme |
+| git diffs | frappé | latte | `delta-auto` resolves the flavour per invocation |
+| Claude Code | `catppuccin-frappe` | | one string in `.claude/settings.json` |
 | tmux | — | — | inherits the terminal (`bg=default,fg=default`) |
 
-The two colorschemes live in `home/.config/nvim/colors/`, alias `oldworld.nvim`'s
-palettes, and carry matching lualine themes in `lua/lualine/themes/`. lualine finds
-those by name, so no `theme =` needs setting anywhere.
+Claude Code takes a single theme string, so it cannot switch between two custom
+themes on its own; `.claude/themes/` holds all four flavours and `/theme` picks
+one. Its statusline *does* follow the appearance, since that is a script.
 
-`oldworld` ships no bufferline integration, so `lua/plugins/bufferline.lua` re-colours
-the buffer tabs from a hand-written palette. It passes `opts.highlights` as a
-*function*, which bufferline re-runs on every `ColorScheme` event — that is what keeps
-the tabs in step across the light/dark swap. The Snacks indent and diff highlights in
-`lua/config/options.lua` are re-derived the same way, on a `ColorScheme` autocmd.
+**Changing the dark flavour** means three files that have to agree with each
+other, plus `/theme` for Claude Code, which is set on its own:
 
-**Switching themes:**
+- `home/.config/ghostty/config` — uncomment one of the alternatives. All four
+  flavours ship with Ghostty, so there is nothing to install.
+- `home/.config/nvim/lua/plugins/theme.lua` — the `LazyVim` `opts.colorscheme`
+  *and* the `auto-dark-mode` callback. LazyVim applies its one at startup, before
+  auto-dark-mode's first poll, so a mismatch shows the wrong theme briefly and
+  then swaps.
+- `home/.gitconfig` — the `[delta "catppuccin-…"]` blocks, plus the names
+  `delta-auto` chooses between.
 
-- ghostty — uncomment one of the alternatives at the top of
-  `home/.config/ghostty/config`. All four Catppuccin flavours ship with Ghostty, so
-  there is nothing to install.
-- nvim — change the colorscheme names in `lua/plugins/theme.lua`, in the `LazyVim`
-  `opts` and in both `auto-dark-mode` callbacks. Catppuccin and mellow are already
-  installed as plugins, so switching to either is a one-file edit.
-- Claude Code — `/theme`, or set `"theme": "custom:catppuccin-mocha"` in
-  `.claude/settings.json`. It takes a single string, so it cannot auto-switch between
-  two custom themes; `"auto"` uses its own built-ins instead.
+Nothing in nvim hardcodes a colour. The Snacks indent and diff highlights
+(`lua/config/options.lua`) and the buffer tabs (`lua/plugins/bufferline.lua`) are
+both derived from groups the active theme defines, re-running on every
+`ColorScheme` event; `lua/config/palette.lua` holds the shared helpers. The diff
+backgrounds are the theme's own green and red mixed into its background at 0.20,
+and `home/.gitconfig` gives delta the same values, so a diff looks the same in
+the pager as in the editor.
+
+**maxx-mellow**, the previous colorscheme, is still present:
+`colors/maxx-mellow{,-dawn}.lua` alias `oldworld.nvim`, which stays installed.
+Going back is a change to `theme.lua` and nothing else.
 
 ## Fonts
 
@@ -193,7 +205,8 @@ dot packages --dump               # adopt whatever is installed
 *installed but unlisted* uses `brew leaves`, so hundreds of transitive dependencies
 are not reported as things you forgot to write down; *listed but missing* uses
 `brew list --formula`, because a formula can arrive as another package's dependency
-and so never appear in `leaves` — `tmux` comes in via `tmuxp`, for one.
+and so never appear in `leaves` — `tmux` is one here, arriving as a dependency
+rather than being requested directly.
 
 Two entries are load-bearing and easy to lose in a prune: **stow** (`dot link` needs
 it) and **starship** (`home/.zshrc` initialises it).
@@ -206,9 +219,8 @@ imports `lua/plugins/` on top — so everything here is an *override* of a LazyV
 default rather than a config from scratch.
 
 ```
-lua/config/     lazy.lua (bootstrap), options, keymaps, autocmds
+lua/config/     lazy.lua (bootstrap), options, keymaps, autocmds, palette
 lua/plugins/    theme, bufferline, dashboard, snacks, example
-lua/lualine/    maxx-mellow lualine themes
 colors/         maxx-mellow, maxx-mellow-dawn
 cheatsheet.txt  keymap notes
 ```
@@ -222,3 +234,48 @@ Pickers are **snacks.nvim**, not telescope: `<leader><space>` smart-find,
 `persistence.nvim` (`<leader>qs` restores). `obsidian.nvim` points at `~/obsdn` with
 its inline markdown rendering off, matching `conceallevel = 0` in
 `lua/config/options.lua`.
+
+### Keymaps
+
+`lua/config/keymaps.lua` adds only what LazyVim does not already provide. The
+navigation keys append `zz`, so the cursor stays centred:
+
+| | |
+|---|---|
+| `<C-u>` `<C-d>` `{` `}` `G` `gg` `<C-i>` `<C-o>` `*` `#` | move, then centre |
+| `<Tab>` / `<S-Tab>` | next / previous buffer |
+| `H` / `L` | start / end of line, in normal and visual |
+| `U` | redo |
+| `jj` `JJ` | leave insert mode |
+| `<A-j>` / `<A-k>` (visual) | move the selection, keeping it selected |
+| `<leader>no` `<leader>=` `<leader>ss` | clear search, equalise splits, spelling |
+
+`H`/`L` take over LazyVim's `<S-h>`/`<S-l>` buffer navigation, which `<Tab>` and
+`<S-Tab>` replace; `[b` and `]b` still work too. `n`/`N` are deliberately left
+alone — LazyVim already remaps them to append `zv`, which opens folds, and
+overriding that to `zz` would trade one behaviour for the other.
+
+Note `<Tab>` and `<C-i>` are the same byte on a classic terminal, so the buffer
+mapping can swallow the centred `<C-i>`. Ghostty tells them apart via the kitty
+keyboard protocol and Neovim keeps them as separate keymap entries, so both work
+here; somewhere that is not true, `<C-i>` would switch buffers.
+
+## Git
+
+`delta` is the pager, wired up in `home/.gitconfig`. `home/.local/bin/delta-auto`
+is a small wrapper that resolves the catppuccin flavour from the macOS appearance
+and then execs it, so diffs follow the light/dark switch.
+
+git runs `core.pager` through a shell and could do that inline, but lazygit
+invokes a pager on its own terms, so the resolution lives in the wrapper where
+every caller reaches it.
+
+**lazygit does not use `core.pager`**, so it names the wrapper again in its own
+config. That file lives at `home/Library/Application Support/lazygit/config.yml`,
+because that is where lazygit looks on macOS unless `XDG_CONFIG_HOME` is set —
+and setting that would move the config path for every other tool honouring it.
+Its shape is version-specific: 0.58 takes a list under `git.pagers`, and older
+guides showing `git.paging.pager` are silently ignored.
+
+`merge.conflictstyle` is `zdiff3`, which keeps the common ancestor's version in a
+conflict so it is clear what each side actually changed.
