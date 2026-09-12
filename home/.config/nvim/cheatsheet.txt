@@ -1,0 +1,117 @@
+- <leader><leader> : find files
+- <leader>/ : grep
+- <leader>: : command history
+- <leader>, : switch buffer
+- <leader>fb : find in buffer
+- <leader>fc : find config
+- <leader>ff : git files
+- <leader>fg : live grep
+- <leader>fr : recent files in root dir
+- <leader>fR : recent files in CWD
+- <leader>sg : search grep in root
+- <leader>sw : search word
+- <leader>s" : register
+- <leader>sk : keymaps
+- <leader>sh : help pages
+
+
+- Shift+h : prev buffer
+- Shift+l : next buffer
+- [b : prev buffer
+- ]b : prev buffer
+- <leader>bd : delete buffer
+- <leader>bo : delete other buffer
+- <leader>bp : toggle pin buffer
+- <leader>bD : Delete buffer + window
+
+- <leader>- : horizontal split
+- <leader>| : vertical split
+- <C-h> : Move left
+- <C-j> : Move down
+- <C-k> : Move up
+- <C-l> : Move right
+
+| Key                  | Action       |
+| -------------------- | ------------ |
+| `<leader><tab>l`     | Last tab     |
+| `<leader><tab>o`     | Close others |
+| `<leader><tab>f`     | First tab    |
+| `<leader><tab><tab>` | New tab      |
+| `<leader><tab>]`     | Next tab     |
+| `<leader><tab>[`     | Prev tab     |
+
+| Key          | Action                     |
+| ------------ | -------------------------- |
+| `gd`         | Go definition              |
+| `gD`         | Go declaration             |
+| `gr`         | References                 |
+| `gI`         | Go implementation          |
+| `gy`         | Type definition            |
+| `K`          | Hover                      |
+| `gK`         | Signature help             |
+| `<c-k>`      | Signature help insert mode |
+| `<leader>ca` | Code action                |
+| `<leader>cr` | Rename                     |
+| `<leader>cf` | Format                     |
+| `]d`         | Next diagnostic            |
+| `[d`         | Prev diagnostic            |
+| `<leader>cd` | Line diagnostics           |
+
+
+| Key          | Action                                  |
+| ------------ | --------------------------------------- |
+| `<leader>gg` | Lazygit                                 |
+| `<leader>gb` | Git blame line                          |
+| `<leader>gB` | Browse repo                             |
+| `<leader>gd` | Git diff picker (snacks)                |
+| `<leader>gs` | Git status (all M/A/D/untracked files)  |
+| `]h`         | Next hunk                               |
+| `[h`         | Prev hunk                               |
+| `<leader>ghp`| Preview hunk inline (current buffer)    |
+| `<leader>ghs`| Stage hunk                              |
+| `<leader>ghr`| Reset hunk                              |
+| `<leader>ghd`| Diff this file vs index                 |
+| `<leader>ghD`| Diff this file vs HEAD~                 |
+
+| Key   | Action                |
+| ----- | --------------------- |
+| `gcc` | Toggle line comment   |
+| `gc`  | Toggle comment motion |
+| `gbc` | Block comment         |
+
+| Key          | Action             |
+| ------------ | ------------------ |
+| `<c-/>`      | Terminal toggle    |
+| `<c-_>`      | Terminal toggle    |
+| `<esc><esc>` | Exit terminal mode |
+
+| Key  | Action      |
+| ---- | ----------- |
+| `zr` | Open folds  |
+| `zm` | Close folds |
+| `zR` | Open all    |
+| `zM` | Close all   |
+
+| Key          | Action                |
+| ------------ | --------------------- |
+| `<leader>xx` | Trouble toggle        |
+| `<leader>xw` | Workspace diagnostics |
+| `<leader>xd` | Document diagnostics  |
+| `<leader>xL` | Location list         |
+| `<leader>xQ` | Quickfix list         |
+
+| Key         | Action              |
+| ----------- | ------------------- |
+| `<c-space>` | Increment selection |
+| `<bs>`      | Decrement selection |
+
+| Key   | Action                   |
+| ----- | ------------------------ |
+| `%`   | Matching bracket         |
+| `*`   | Search word under cursor |
+| `ciw` | Change inner word        |
+| `dap` | Delete around paragraph  |
+| `gg`  | Top file                 |
+| `G`   | Bottom file              |
+
+

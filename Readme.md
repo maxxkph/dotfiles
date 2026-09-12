@@ -70,7 +70,7 @@ home/                the stow package -> ~
   .claude/           settings.json, statusline.sh, themes/ (6)
   .config/
     ghostty/         config (themes come from Ghostty's bundled Catppuccin set)
-    nvim/            lazy.nvim, lua/maxxkph/ + 34 plugin specs
+    nvim/            LazyVim + lua/config, lua/plugins, colors/
     zed/             settings.json, keymap.json
   .gitconfig
   .tmux.conf
@@ -119,34 +119,38 @@ inside `home/.config/nvim`.
 
 ## Themes
 
-Catppuccin. **Latte** is the only light flavour; **frappé**, **macchiato** and
-**mocha** are all dark, so a light/dark pair is always latte plus one of the three.
+Two palettes, split by tool. Terminal and Claude Code run **Catppuccin**; nvim runs
+**maxx-mellow**, a local colorscheme built on `oldworld.nvim`. Both follow the OS
+appearance, so a light/dark flip moves everything at once.
 
 | | dark | light | how |
 |---|---|---|---|
 | ghostty | `Catppuccin Mocha` (bundled) | `Catppuccin Latte` (bundled) | native `theme = light:…,dark:…` |
-| nvim | mocha | latte | `auto-dark-mode.nvim` flips `vim.o.background` |
-| Claude Code | 4 flavours available | | set in `.claude/settings.json` |
+| nvim | `maxx-mellow` | `maxx-mellow-dawn` | `auto-dark-mode.nvim` swaps the colorscheme |
+| Claude Code | catppuccin ×4 + the maxx-mellow pair | | set in `.claude/settings.json` |
 | tmux | — | — | inherits the terminal (`bg=default,fg=default`) |
 
-**Switching the dark flavour** is one line per tool:
+The two colorschemes live in `home/.config/nvim/colors/`, alias `oldworld.nvim`'s
+palettes, and carry matching lualine themes in `lua/lualine/themes/`. lualine finds
+those by name, so no `theme =` needs setting anywhere.
+
+`oldworld` ships no bufferline integration, so `lua/plugins/bufferline.lua` re-colours
+the buffer tabs from a hand-written palette. It passes `opts.highlights` as a
+*function*, which bufferline re-runs on every `ColorScheme` event — that is what keeps
+the tabs in step across the light/dark swap. The Snacks indent and diff highlights in
+`lua/config/options.lua` are re-derived the same way, on a `ColorScheme` autocmd.
+
+**Switching themes:**
 
 - ghostty — uncomment one of the alternatives at the top of
-  `home/.config/ghostty/config`. All four flavours ship with Ghostty, so there is
-  nothing to install.
-- nvim — change `DARK` at the top of `lua/plugins/color-scheme.lua`.
+  `home/.config/ghostty/config`. All four Catppuccin flavours ship with Ghostty, so
+  there is nothing to install.
+- nvim — change the colorscheme names in `lua/plugins/theme.lua`, in the `LazyVim`
+  `opts` and in both `auto-dark-mode` callbacks. Catppuccin and mellow are already
+  installed as plugins, so switching to either is a one-file edit.
 - Claude Code — `/theme`, or set `"theme": "custom:catppuccin-mocha"` in
   `.claude/settings.json`. It takes a single string, so it cannot auto-switch between
   two custom themes; `"auto"` uses its own built-ins instead.
-
-**nvim uses `colorscheme catppuccin` with no flavour suffix**, so the flavour is
-resolved from `vim.o.background`. Naming `catppuccin-macchiato` would pin it and break
-light mode. The Telescope and LSP-semantic overrides re-run on every `ColorScheme`
-event so they re-derive from the active flavour rather than keeping dark values into
-light mode.
-
-`home/.claude/themes/` also keeps the older `maxx-mellow` pair, so `/theme` can still
-reach it.
 
 ## Fonts
 
@@ -196,20 +200,25 @@ it) and **starship** (`home/.zshrc` initialises it).
 
 ## Neovim
 
-A from-scratch config on lazy.nvim — not a distro. `init.lua` is one line,
-`require("maxxkph")`, and `lua/maxxkph/init.lua` pulls in options, lazy, keymaps and
-the small feature modules. Plugin specs are one file per plugin under `lua/plugins/`.
+[LazyVim](https://lazyvim.org) on lazy.nvim. `init.lua` is one line,
+`require("config.lazy")`, which bootstraps lazy.nvim, imports `lazyvim.plugins`, then
+imports `lua/plugins/` on top — so everything here is an *override* of a LazyVim
+default rather than a config from scratch.
 
-Adapted from [dmmulroy/.dotfiles](https://github.com/dmmulroy/.dotfiles) with the
-OCaml / ReasonML / Gleam tooling removed and the module namespace renamed. Two specs
-still point at his repos (`dmmulroy/tsc.nvim`, `dmmulroy/ts-error-translator.nvim`)
-because he authored those plugins — upstream sources, not leftovers.
+```
+lua/config/     lazy.lua (bootstrap), options, keymaps, autocmds
+lua/plugins/    theme, bufferline, dashboard, snacks, example
+lua/lualine/    maxx-mellow lualine themes
+colors/         maxx-mellow, maxx-mellow-dawn
+cheatsheet.txt  keymap notes
+```
 
-`typescript-tools.nvim` needs a tsserver. It finds one in any project with a local
-`typescript`; outside such a project it needs the `typescript` npm global, which is in
-the Brewfile.
+`lua/plugins/example.lua` is LazyVim's shipped sample. It starts with
+`if true then return {} end`, so it loads nothing — it is kept as a reference for the
+override syntax.
 
-`after/plugin/herdr-navigation.lua` provides `<C-h/j/k/l>` split navigation. Its
-cross-pane handoff targets herdr and falls back to `TmuxNavigate`, which needs
-`christoomey/vim-tmux-navigator` — not installed here, so at a split edge nothing
-happens. Navigation *within* nvim works regardless.
+Pickers are **snacks.nvim**, not telescope: `<leader><space>` smart-find,
+`<leader>ff`/`fg`/`fb` files/grep/buffers, `<leader>g*` for git. Sessions come from
+`persistence.nvim` (`<leader>qs` restores). `obsidian.nvim` points at `~/obsdn` with
+its inline markdown rendering off, matching `conceallevel = 0` in
+`lua/config/options.lua`.
