@@ -2,51 +2,12 @@
 
 # Claude Code statusline.
 #
-#   Opus 5 │ main +42/-7 │ dotfiles │ ▓▓░░░░░░░░ 230k/1000k │ $86.43
-#          │ 5h 9% ·2h14m │ 7d 16% ·4d │ high │ v2.1.263
+#   Sonnet 5 (high) │ main +42/-7 │ dotfiles │ ▓▓░░░░░░░░ 230k/1000k
+#                    │ 5h 9% · 2h14m │ 7d 16% · 4d │ v2.1.263
 #
 # Catppuccin, in 24-bit colour. The palette is picked from the macOS appearance
 # so it follows ghostty's `light:Catppuccin Latte,dark:Catppuccin Frappe`; the
 # dark half is exactly the frappe palette. The `defaults read` costs about 6ms.
-
-CURRENCY='$'         # symbol to print (e.g. '$', '€', '£', '¥')
-CURRENCY_CODE='USD'  # ISO 4217 code for the rate lookup; 'USD' skips it entirely
-EXCHANGE_RATE=1      # fallback when the API cannot be reached
-
-CACHE_DIR="${HOME}/.cache/cc-status-line"
-CACHE_FILE="${CACHE_DIR}/exchange-rate.json"
-CACHE_MAX_AGE=86400  # 24h
-
-# get_exchange_rate -> USD->CURRENCY_CODE rate, cached for a day.
-get_exchange_rate() {
-  # Spelled out as an `if` for legibility; the original one-liner was correct
-  # (&& and || are equal precedence and left-associative, so it grouped as
-  # `(empty || USD) && echo && return`), just hard to read at a glance.
-  if [ -z "$CURRENCY_CODE" ] || [ "$CURRENCY_CODE" = "USD" ]; then
-    echo "1"
-    return
-  fi
-
-  if [ -f "$CACHE_FILE" ]; then
-    local mtime age cached
-    mtime=$(stat -f %m "$CACHE_FILE" 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
-    age=$((NOW - mtime))
-    if [ "$age" -lt "$CACHE_MAX_AGE" ]; then
-      cached=$(jq -r --arg c "$CURRENCY_CODE" '.rates[$c] // empty' "$CACHE_FILE" 2>/dev/null)
-      [ -n "$cached" ] && echo "$cached" && return
-    fi
-  fi
-
-  mkdir -p "$CACHE_DIR"
-  local fresh
-  fresh=$(curl -sf --max-time 2 "https://api.frankfurter.app/latest?from=USD&to=${CURRENCY_CODE}" 2>/dev/null)
-  if [ -n "$fresh" ]; then
-    printf '%s' "$fresh" > "$CACHE_FILE"
-    jq -r --arg c "$CURRENCY_CODE" '.rates[$c] // empty' <<< "$fresh" 2>/dev/null && return
-  fi
-
-  echo "$EXCHANGE_RATE"
-}
 
 data=$(cat)
 NOW=$(date +%s)
@@ -57,14 +18,13 @@ NOW=$(date +%s)
 # Split on a unit separator rather than a tab: tab counts as IFS *whitespace*,
 # so `read` collapses runs of it and a single empty field silently shifts every
 # later value one slot left. U+001F is not whitespace, so empty fields survive.
-IFS=$'\x1f' read -r model cwd max_ctx used_pct cost_usd \
+IFS=$'\x1f' read -r model cwd max_ctx used_pct \
   five_pct five_reset week_pct week_reset effort fast_mode cc_version <<< "$(
   echo "$data" | jq -r '[
     (.model.display_name // .model.id // "unknown"),
     (.workspace.current_dir // .cwd // ""),
     (.context_window.context_window_size // 200000),
     (.context_window.used_percentage // ""),
-    (.cost.total_cost_usd // 0),
     (.rate_limits.five_hour.used_percentage // ""),
     (.rate_limits.five_hour.resets_at // ""),
     (.rate_limits.seven_day.used_percentage // ""),
@@ -109,7 +69,7 @@ if defaults read -g AppleInterfaceStyle >/dev/null 2>&1; then
   MAUVE='\033[38;2;202;158;230m'     # git branch
   LAVENDER='\033[38;2;186;187;241m'  # model
   PEACH='\033[38;2;239;159;118m'     # fast mode
-  GREEN='\033[38;2;166;209;137m'     # cost, insertions, healthy gauges
+  GREEN='\033[38;2;166;209;137m'     # insertions, healthy gauges
   YELLOW='\033[38;2;229;200;144m'    # gauges filling up
   OVERLAY='\033[38;2;115;121;148m'   # separators, empty bar
   SUBTEXT='\033[38;2;165;173;206m'   # secondary text
@@ -178,7 +138,7 @@ until_reset() {
   fi
 }
 
-# gauge <label> <pct> <resets_at> -> "5h 9% ·2h14m", shaded green->yellow->red
+# gauge <label> <pct> <resets_at> -> "5h 9% · 2h14m", shaded green->yellow->red
 gauge() {
   local label="$1" raw="$2" reset="$3" p colour left
   if [ -z "$raw" ] || [ "$raw" = "null" ]; then return; fi
@@ -192,20 +152,15 @@ gauge() {
   fi
   printf '%s%s%s %s%s%%%s' "$OVERLAY" "$label" "$RESET" "$colour" "$p" "$RESET"
   left=$(until_reset "$reset")
-  [ -n "$left" ] && printf ' %s·%s%s' "$OVERLAY" "$left" "$RESET"
+  [ -n "$left" ] && printf ' %s· %s%s' "$OVERLAY" "$left" "$RESET"
 }
 
-# Cost, converted out of USD if a currency is configured.
-if [ -n "$cost_usd" ] && [ "$cost_usd" != "0" ] && [ "$cost_usd" != "null" ]; then
-  rate=$(get_exchange_rate)
-  cost_converted=$(echo "$cost_usd * $rate" | bc -l 2>/dev/null || echo "$cost_usd")
-  cost_fmt=$(printf "%.2f" "$cost_converted" 2>/dev/null || echo "0.00")
-  cost_display="${GREEN}${CURRENCY}${cost_fmt}${RESET}"
-else
-  cost_display="${OVERLAY}${CURRENCY}0.00${RESET}"
-fi
-
 output="${LAVENDER}${model}${RESET}"
+if [ -n "$effort" ] && [ "$effort" != "null" ]; then
+  output="${output} ${SUBTEXT}(${effort})${RESET}"
+  # Fast mode rides alongside effort, and only when it is actually on.
+  [ "$fast_mode" = "true" ] && output="${output} ${PEACH}⚡${RESET}"
+fi
 
 if [ -n "$branch" ]; then
   output="${output}${SEP}${MAUVE}${branch}${RESET}"
@@ -216,18 +171,11 @@ fi
 
 output="${output}${SEP}${TEAL}${folder}${RESET}"
 output="${output}${SEP}${context_info}"
-output="${output}${SEP}${cost_display}"
 
 five_seg=$(gauge 5h "$five_pct" "$five_reset")
 week_seg=$(gauge 7d "$week_pct" "$week_reset")
 [ -n "$five_seg" ] && output="${output}${SEP}${five_seg}"
 [ -n "$week_seg" ] && output="${output}${SEP}${week_seg}"
-
-if [ -n "$effort" ] && [ "$effort" != "null" ]; then
-  output="${output}${SEP}${SUBTEXT}${effort}${RESET}"
-  # Fast mode rides alongside effort, and only when it is actually on.
-  [ "$fast_mode" = "true" ] && output="${output} ${PEACH}⚡${RESET}"
-fi
 
 [ -n "$cc_version" ] && [ "$cc_version" != "null" ] && output="${output}${SEP}${SUBTEXT}v${cc_version}${RESET}"
 
