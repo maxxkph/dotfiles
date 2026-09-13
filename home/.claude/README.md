@@ -1,7 +1,8 @@
 # Agent skills
 
 Quick reference: what to type, and when. Adapted from
-[mattpocock/skills](https://github.com/mattpocock/skills).
+[mattpocock/skills](https://github.com/mattpocock/skills) and
+[cursor/plugins](https://github.com/cursor/plugins) (the `pstack` skill set).
 
 ## The spec → ticket → build chain
 
@@ -36,6 +37,23 @@ need to run those two by hand, only reach for them directly for a one-off.
 | `/research`                      | Hand off reading/API research to a background agent                            |
 | `/wizard`                        | Generate a walkthrough for steps only a human can do (credentials, dashboards) |
 | `/wait-what`                     | My last answer missed the point — re-pitch it plainly                          |
+
+## Writing & review
+
+From `cursor/plugins`, not the mattpocock chain above.
+
+| Type this             | When                                                                     |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `/unslop`              | Cut AI writing tells (jargon, em dashes, filler) from any text           |
+| `/technical-writing`   | Writing or reviewing docs, RFCs, readmes, PR descriptions, commit messages |
+| `/no-comments`         | Sweep a diff for dead/workaround comments, fix what's accepted           |
+
+`no-comments` spawns a custom subagent, **Comment Sicko**
+(`home/.claude/agents/comment-sicko.md`), to do the actual comment audit.
+That file has to exist for the skill to work, it isn't optional. It also
+leans on `/architect`, `/how`, and `/why` for judgment calls mid-flow.
+None of those three are installed, so it just reasons those steps out
+directly instead of skipping them.
 
 ## Notes
 
