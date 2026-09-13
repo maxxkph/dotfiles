@@ -8,7 +8,7 @@ theme = light:Catppuccin Latte,dark:Catppuccin Frappe
 # Osaka Code is Apple's Osaka-Mono with the 372 glyphs it drew full-width
 # (◯ ● → — “ ”, Greek, Cyrillic, box drawing) unmapped, so they fall back at
 # one cell instead of bleeding into the next -- plus a repaired OS/2 table.
-# Built by lib/osaka-code.py; plain `Osaka` is still installed to A/B against.
+# Built by osaka-code.py in the font repo; plain `Osaka` is still installed to A/B.
 font-family = Osaka Code
 # font-family = CaskaydiaCove Nerd Font
 
