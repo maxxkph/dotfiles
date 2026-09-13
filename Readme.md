@@ -1,4 +1,4 @@
-# 🛠️ Dotfiles
+# Dotfiles
 
 Configs for **Ghostty**, **Neovim**, **Zed**, **tmux**, **zsh**, **git** and
 **Claude Code**, with one CLI to set up a fresh Mac. **macOS only** — there is no
