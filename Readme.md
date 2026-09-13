@@ -136,34 +136,6 @@ nothing to run when the appearance changes.
 | Claude Code | `catppuccin-frappe` | | one string in `.claude/settings.json` |
 | tmux | — | — | inherits the terminal (`bg=default,fg=default`) |
 
-Claude Code takes a single theme string, so it cannot switch between two custom
-themes on its own; `.claude/themes/` holds all four flavours and `/theme` picks
-one. Its statusline *does* follow the appearance, since that is a script.
-
-**Changing the dark flavour** means three files that have to agree with each
-other, plus `/theme` for Claude Code, which is set on its own:
-
-- `home/.config/ghostty/config` — uncomment one of the alternatives. All four
-  flavours ship with Ghostty, so there is nothing to install.
-- `home/.config/nvim/lua/plugins/theme.lua` — the `LazyVim` `opts.colorscheme`
-  *and* the `auto-dark-mode` callback. LazyVim applies its one at startup, before
-  auto-dark-mode's first poll, so a mismatch shows the wrong theme briefly and
-  then swaps.
-- `home/.gitconfig` — the `[delta "catppuccin-…"]` blocks, plus the names
-  `delta-auto` chooses between.
-
-Nothing in nvim hardcodes a colour. The Snacks indent and diff highlights
-(`lua/config/options.lua`) and the buffer tabs (`lua/plugins/bufferline.lua`) are
-both derived from groups the active theme defines, re-running on every
-`ColorScheme` event; `lua/config/palette.lua` holds the shared helpers. The diff
-backgrounds are the theme's own green and red mixed into its background at 0.20,
-and `home/.gitconfig` gives delta the same values, so a diff looks the same in
-the pager as in the editor.
-
-**maxx-mellow**, the previous colorscheme, is still present:
-`colors/maxx-mellow{,-dawn}.lua` alias `oldworld.nvim`, which stays installed.
-Going back is a change to `theme.lua` and nothing else.
-
 ## Fonts
 
 The editor font is licensed, so it lives in a **private** repo. `dot fonts` clones it
@@ -181,13 +153,6 @@ It needs `~/.ssh/id_ed25519` to exist and be registered with GitHub, which is wh
 `dot gen-ssh-key` sets up (it also writes a `github.com` block into `~/.ssh/config`
 with `UseKeychain`, and copies the public key to the clipboard). Without a key,
 `dot fonts` warns and skips rather than failing the whole install.
-
-ghostty uses `Osaka` from this repo. Note that `Osaka` does not appear in
-`ghostty +list-fonts`, because that listing only surfaces families flagged monospace
-and this face is not (`post.isFixedPitch = 0`) — naming it explicitly still resolves,
-which `ghostty +show-face --string=A` confirms.
-
-zed deliberately sets no `buffer_font_family` and falls back to its own default.
 
 ## Packages
 
@@ -213,92 +178,20 @@ it) and **starship** (`home/.zshrc` initialises it).
 
 ## Neovim
 
-[LazyVim](https://lazyvim.org) on lazy.nvim. `init.lua` is one line,
-`require("config.lazy")`, which bootstraps lazy.nvim, imports `lazyvim.plugins`, then
-imports `lua/plugins/` on top — so everything here is an *override* of a LazyVim
-default rather than a config from scratch.
-
-```
-lua/config/     lazy.lua (bootstrap), options, keymaps, autocmds, palette
-lua/plugins/    theme, bufferline, dashboard, snacks, example
-colors/         maxx-mellow, maxx-mellow-dawn
-cheatsheet.txt  keymap notes
-```
-
-`lua/plugins/example.lua` is LazyVim's shipped sample. It starts with
-`if true then return {} end`, so it loads nothing — it is kept as a reference for the
-override syntax.
-
-`lazyvim.json` enables exactly one LazyVim extra, `formatting.prettier`. Without
-it conform.nvim formats only lua, fish and sh, so markdown had no formatter at
-all. The binary comes from Mason, not the Brewfile, so `prettier` resolves inside
-nvim and nowhere else.
-
-Format-on-save is off (`vim.g.autoformat = false` in `lua/config/options.lua`),
-against the LazyVim default. `<leader>cf` formats on request. `<leader>uf` and
-`<leader>uF` turn autoformat back on globally or for one buffer.
-
-Pickers are **snacks.nvim**, not telescope: `<leader><space>` smart-find,
-`<leader>ff`/`fg`/`fb` files/grep/buffers, `<leader>g*` for git. Sessions come from
-`persistence.nvim` (`<leader>qs` restores). `obsidian.nvim` points at `~/obsdn` with
-its inline markdown rendering off, matching `conceallevel = 0` in
-`lua/config/options.lua`.
-
-### Keymaps
-
-`lua/config/keymaps.lua` adds only what LazyVim does not already provide. The
-navigation keys append `zz`, so the cursor stays centred:
-
-| | |
-|---|---|
-| `<C-u>` `<C-d>` `{` `}` `G` `gg` `<C-i>` `<C-o>` `*` `#` | move, then centre |
-| `<Tab>` / `<S-Tab>` | next / previous buffer |
-| `H` / `L` | start / end of line, in normal and visual |
-| `U` | redo |
-| `jj` `JJ` | leave insert mode |
-| `<A-j>` / `<A-k>` (visual) | move the selection, keeping it selected |
-| `<leader>no` `<leader>=` `<leader>ss` | clear search, equalise splits, spelling |
-
-`H`/`L` take over LazyVim's `<S-h>`/`<S-l>` buffer navigation, which `<Tab>` and
-`<S-Tab>` replace; `[b` and `]b` still work too. `n`/`N` are deliberately left
-alone — LazyVim already remaps them to append `zv`, which opens folds, and
-overriding that to `zz` would trade one behaviour for the other.
-
-Note `<Tab>` and `<C-i>` are the same byte on a classic terminal, so the buffer
-mapping can swallow the centred `<C-i>`. Ghostty tells them apart via the kitty
-keyboard protocol and Neovim keeps them as separate keymap entries, so both work
-here; somewhere that is not true, `<C-i>` would switch buffers.
+[LazyVim](https://lazyvim.org) on lazy.nvim, so everything in `lua/plugins/` is an
+override of a LazyVim default rather than a config from scratch. Custom keymaps are
+in `lua/config/keymaps.lua`, notes on them in `cheatsheet.txt`. Format-on-save is
+off, `<leader>cf` formats on request.
 
 ## Git
 
-`delta` is the pager, wired up in `home/.gitconfig`. `home/.local/bin/delta-auto`
-is a small wrapper that resolves the catppuccin flavour from the macOS appearance
-and then execs it, so diffs follow the light/dark switch.
-
-git runs `core.pager` through a shell and could do that inline, but lazygit
-invokes a pager on its own terms, so the resolution lives in the wrapper where
-every caller reaches it.
-
-**lazygit does not use `core.pager`**, so it names the wrapper again in its own
-config. That file lives at `home/Library/Application Support/lazygit/config.yml`,
-because that is where lazygit looks on macOS unless `XDG_CONFIG_HOME` is set —
-and setting that would move the config path for every other tool honouring it.
-Its shape is version-specific: 0.58 takes a list under `git.pagers`, and older
-guides showing `git.paging.pager` are silently ignored.
-
-`merge.conflictstyle` is `zdiff3`, which keeps the common ancestor's version in a
-conflict so it is clear what each side actually changed.
+`delta` is the pager, via `home/.local/bin/delta-auto`, a wrapper that picks the
+catppuccin flavour from the macOS appearance. lazygit ignores `core.pager`, so it
+names the wrapper again in its own config.
 
 ## Claude Code
 
-[`home/.claude/README.md`](home/.claude/README.md) is the guide to the 22 skills
-in `skills/`: which one to type, and when. They are vendored from
+`home/.claude/` holds the settings, statusline, themes and 22 skills vendored from
 [mattpocock/skills](https://github.com/mattpocock/skills) and
-[cursor/plugins](https://github.com/cursor/plugins), with two renamed. One rename
-was forced: the official `code-review` plugin already owns `/code-review` here,
-and two skills cannot share a name. `agents/` holds the one subagent a skill
-spawns.
-
-`statusline.sh` prints the model and effort, the branch with uncommitted line
-churn, the folder, a context bar, and both rate-limit windows with a countdown to
-reset.
+[cursor/plugins](https://github.com/cursor/plugins).
+[`home/.claude/README.md`](home/.claude/README.md) says which skill to type, and when.
