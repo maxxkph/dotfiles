@@ -65,6 +65,7 @@ lib/
   packages.sh        Homebrew, the Brewfile, the font
   setup.sh           gen-ssh-key, benchmark-shell, edit, completions
   doctor.sh          health check
+  osaka-code.py      retunes Osaka-Mono into the `Osaka Code` terminal font
 
 home/                the stow package -> ~
   .claude/           settings.json, statusline.sh, skills/, agents/, themes/ (4)
@@ -147,7 +148,33 @@ dot gen-ssh-key      # once, on a new machine
 dot fonts
 ```
 
-Family names for configs: **`MonoLisa Nerd Font Mono`** and **`Osaka`**.
+Family names for configs: **`MonoLisa Nerd Font Mono`** and **`Osaka Code`**.
+
+### Osaka Code
+
+Ghostty uses `Osaka Code`, not plain `Osaka`. Apple never meant Osaka-Mono for code, but
+its ASCII is already a rigid 500-unit half-width grid — that part is fine. The problem is
+372 *non*-CJK codepoints (arrows, curly quotes, dashes, Greek, Cyrillic, box drawing,
+`◯ ● ■ ★`) that it draws as 1000-unit full-width CJK glyphs. A terminal gives them one
+cell, so they bleed into the next — which is what smears the commit circle in lazygit.
+
+`lib/osaka-code.py` unmaps those 372 rather than redrawing them, and repairs the OS/2
+table the `.otf` conversion left zeroed. Ghostty already falls back cleanly for whatever
+Osaka lacks, so unmapping hands them to its bundled JetBrains Mono at the right width.
+The inversion is the whole point: what Osaka is *missing* always looked fine, what it
+*has* was the broken part. Line metrics are copied from `hhea` unchanged, so
+`adjust-cell-height` above stays valid.
+
+**`dot fonts` installs it — you do not need to build anything.** The built `.otf` lives
+in the private font repo alongside its source, which has the longer write-up. The script
+is only for changing how the retune works:
+
+```sh
+pip3 install --user fonttools
+python3 lib/osaka-code.py          # rebuilds ~/Library/Fonts/OsakaCode-Regular.otf
+```
+
+Plain `Osaka` stays installed to A/B against.
 
 It needs `~/.ssh/id_ed25519` to exist and be registered with GitHub, which is what
 `dot gen-ssh-key` sets up (it also writes a `github.com` block into `~/.ssh/config`

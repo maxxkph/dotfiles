@@ -5,7 +5,11 @@ theme = light:Catppuccin Latte,dark:Catppuccin Frappe
 
 # ==== FONTS ====
 # font-family = Ioskeley Mono
-font-family = Osaka
+# Osaka Code is Apple's Osaka-Mono with the 372 glyphs it drew full-width
+# (◯ ● → — “ ”, Greek, Cyrillic, box drawing) unmapped, so they fall back at
+# one cell instead of bleeding into the next -- plus a repaired OS/2 table.
+# Built by lib/osaka-code.py; plain `Osaka` is still installed to A/B against.
+font-family = Osaka Code
 # font-family = CaskaydiaCove Nerd Font
 
 window-save-state = always
