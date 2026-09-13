@@ -3,7 +3,7 @@
 # Claude Code statusline.
 #
 #   Sonnet 5 (high) │ main +42/-7 │ dotfiles │ ▓▓░░░░░░░░ 230k/1000k
-#                    │ 5h 9% · 2h14m │ 7d 16% · 4d │ v2.1.263
+#                   │ 5h 9% · 2h14m │ 7d 16% · 4d │ v2.1.263
 #
 # Catppuccin, in 24-bit colour. The palette is picked from the macOS appearance
 # so it follows ghostty's `light:Catppuccin Latte,dark:Catppuccin Frappe`; the

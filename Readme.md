@@ -67,7 +67,7 @@ lib/
   doctor.sh          health check
 
 home/                the stow package -> ~
-  .claude/           settings.json, statusline.sh, themes/ (4)
+  .claude/           settings.json, statusline.sh, skills/, agents/, themes/ (4)
   .config/
     ghostty/         config (themes come from Ghostty's bundled Catppuccin set)
     nvim/            LazyVim + lua/config, lua/plugins, colors/
@@ -229,6 +229,18 @@ cheatsheet.txt  keymap notes
 `if true then return {} end`, so it loads nothing — it is kept as a reference for the
 override syntax.
 
+`lazyvim.json` records which LazyVim *extras* are enabled. Exactly one is:
+`formatting.prettier`, which adds prettier to conform.nvim for markdown, JSON,
+YAML, CSS, HTML and the JS/TS family. Without it LazyVim formats only lua, fish
+and sh, so markdown had no formatter at all and `<leader>cf` looked broken. The
+binary comes from Mason rather than the Brewfile, so `prettier` resolves inside
+nvim and nowhere else.
+
+Format-on-save is **off** — `vim.g.autoformat = false` in `lua/config/options.lua`,
+overriding the LazyVim default, which loads its own options first and the repo's
+second. `<leader>cf` formats on request; `<leader>uf` and `<leader>uF` turn
+autoformat back on globally or for one buffer.
+
 Pickers are **snacks.nvim**, not telescope: `<leader><space>` smart-find,
 `<leader>ff`/`fg`/`fb` files/grep/buffers, `<leader>g*` for git. Sessions come from
 `persistence.nvim` (`<leader>qs` restores). `obsidian.nvim` points at `~/obsdn` with
@@ -279,3 +291,49 @@ guides showing `git.paging.pager` are silently ignored.
 
 `merge.conflictstyle` is `zdiff3`, which keeps the common ancestor's version in a
 conflict so it is clear what each side actually changed.
+
+## Claude Code
+
+```
+.claude/
+  settings.json    theme, statusline hook, enabled plugins, default model
+  statusline.sh    the status line, below
+  skills/          22 skills, one directory each
+  agents/          comment-sicko.md, the subagent `no-comments` spawns
+  themes/          the four catppuccin flavours
+  README.md        which skill to type, and when
+```
+
+`~/.claude` is one of the four `shared_dirs()` that stay real directories, because
+Claude Code writes `projects/`, history and memory in there next to what this repo
+owns. Everything below it folds normally — `~/.claude/skills/tdd` and
+`~/.claude/agents` are each a single symlink into the repo.
+
+**Skills** come from two upstreams: the issue-driven engineering chain from
+[mattpocock/skills](https://github.com/mattpocock/skills), and three writing ones
+(`unslop`, `technical-writing`, `no-comments`) from
+[cursor/plugins](https://github.com/cursor/plugins). Two are renamed here:
+`setup-matt-pocock-skills` to `setup-agent-conventions`, since the original only
+made sense attached to the whole collection, and `code-review` to `diff-review`,
+because the official `code-review` plugin already owns `/code-review` on this
+machine and two skills cannot share a name. Every in-file reference was updated to
+match. `home/.claude/README.md` holds the usage table.
+
+`no-comments` is the one skill that is not self-contained: it spawns a subagent,
+Comment Sicko, so `agents/comment-sicko.md` has to exist for it to run at all.
+
+**The statusline** is the one part of Claude Code that follows the appearance on
+its own, for the reason given under [Themes](#themes):
+
+```
+Sonnet 5 (high) │ main +42/-7 │ dotfiles │ ▓▓░░░░░░░░ 230k/1000k
+                │ 5h 9% · 2h14m │ 7d 16% · 4d │ v2.1.263
+```
+
+Model and effort, branch with uncommitted line churn, folder, a ten-block context
+bar, both rate-limit windows with a countdown to their reset, and the version. It
+reads one JSON payload on stdin and makes one `jq` call, splitting the fields on
+`U+001F` rather than a tab — a tab is IFS whitespace, so `read` collapses runs of
+it and one empty field silently shifts every later value a slot left. The churn
+counts come from `git diff --numstat`, which does not see untracked files: a new
+file reads as zero until it is staged.
