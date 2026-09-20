@@ -47,6 +47,7 @@ source "$DOTFILES/lib/common.sh"
 source "$DOTFILES/lib/stow.sh"
 source "$DOTFILES/lib/packages.sh"
 source "$DOTFILES/lib/setup.sh"
+source "$DOTFILES/lib/tmux.sh"
 source "$DOTFILES/lib/doctor.sh"
 
 # ----------------------------------------------------------------- usage ----
@@ -63,6 +64,7 @@ Setup
   dot unlink             remove the symlinks stow created
   dot relink             unlink + link — use after moving files in the repo
   dot fonts              fetch the private font repo over SSH and install it
+  dot tmux-plugins       clone/update catppuccin at the pinned tag
 
 Packages
   dot packages [--work]  install from packages/Brewfile
@@ -98,7 +100,8 @@ install_steps() {
     "Brewfile packages ;; do_packages    ;; true" \
     "Stow configs      ;; do_link        ;; true" \
     "SSH key           ;; do_gen_ssh_key ;; false" \
-    "MonoLisa font     ;; do_fonts       ;; false"
+    "MonoLisa font     ;; do_fonts       ;; false" \
+    "tmux plugins      ;; do_tmux_plugins ;; false"
 }
 
 # run_steps [filter-fn ...] — run the registry, recording what failed. With
@@ -167,6 +170,7 @@ case "${CMD:-help}" in
   unlink)          do_unlink ;;
   relink)          do_unlink; do_link ;;
   fonts)           do_fonts ;;
+  tmux-plugins)    do_tmux_plugins ;;
 
   packages)
     if [[ -n "$DUMP" ]]; then do_packages_dump; else do_packages "$WORK"; fi ;;
@@ -186,6 +190,7 @@ case "${CMD:-help}" in
     info "Reverting${DRY_RUN:+  (dry run)}"
     do_restore
     do_fonts_remove
+    do_tmux_plugins_remove
     warn "packages left in place — 'brew bundle cleanup --file=packages/Brewfile' to prune"
     ;;
   cleanup)         do_cleanup ;;
