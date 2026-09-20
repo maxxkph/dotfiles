@@ -63,4 +63,11 @@ directly instead of skipping them.
   `prototype`. Everything else is manual-only.
 - `diff-review` is Matt Pocock's `code-review`, renamed — `/code-review`
   already belongs to a different plugin on this machine.
-- Full detail lives in each skill's own file, `skills/<name>/SKILL.md`.
+- Full detail lives in each skill's own file. The real copy is
+  `home/.agents/skills/<name>/SKILL.md` in the dotfiles repo, which lands at
+  `~/.agents/skills/<name>/`, the cross-client path other agents read.
+  `~/.claude/skills/<name>` is a symlink to it, because Claude Code only scans
+  its own directory. Edit the copy under `.agents/`, never the symlink.
+- These skills are not Claude-only. Cursor, Codex, Gemini CLI, opencode and Amp
+  read `~/.agents/skills/` too, so anything written here works in all of them.
+  Wording that names Claude specifically will read oddly elsewhere.

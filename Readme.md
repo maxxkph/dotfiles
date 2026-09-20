@@ -1,7 +1,7 @@
 # Dotfiles
 
 Configs for **Ghostty**, **Neovim**, **Zed**, **tmux**, **zsh**, **git** and
-**Claude Code**, with one CLI to set up a fresh Mac. **macOS only** — there is no
+**coding agents**, with one CLI to set up a fresh Mac. **macOS only** — there is no
 Linux branch anywhere in the tooling.
 
 ## Install
@@ -67,7 +67,10 @@ lib/
   doctor.sh          health check
 
 home/                the stow package -> ~
-  .claude/           settings.json, statusline.sh, skills/, agents/, themes/ (4)
+  .agents/
+    skills/          the 22 skills themselves, read by any agent (22)
+  .claude/           settings.json, statusline.sh, agents/, themes/ (4)
+    skills/          one symlink per skill, pointing into .agents/skills/
   .config/
     ghostty/         config (themes come from Ghostty's bundled Catppuccin set)
     nvim/            LazyVim + lua/config, lua/plugins, colors/
@@ -105,9 +108,12 @@ the target does not exist. That is wanted where the repo owns the whole director
 `~/.config/nvim` is one link, so anything added there is instantly tracked. It is
 dangerous where the directory is shared: on a machine with no `~/.config` yet, stow
 would make `~/.config` itself a symlink into this repo and every other tool's config
-would be written inside it. `shared_dirs()` lists the four that must stay real
-(`.config`, `.claude`, `.local`, `.local/bin`); `dot link` pre-creates them so stow
-has to descend.
+would be written inside it. `shared_dirs()` lists the seven that must stay real
+(`.config`, `.claude`, `.claude/skills`, `.agents`, `.agents/skills`, `.local`,
+`.local/bin`); `dot link` pre-creates them so stow has to descend. The two skills
+directories are there because agents write into them too: Claude Code drops
+account-synced skills in `~/.claude/skills/synced`, and other agents install into
+`~/.agents/skills`.
 
 **Clears only genuinely stale links.** A link already pointing at the right source is
 left for `stow --restow`; deleting and recreating all of them every run would churn
@@ -206,9 +212,30 @@ off, `<leader>cf` formats on request.
 catppuccin flavour from the macOS appearance. lazygit ignores `core.pager`, so it
 names the wrapper again in its own config.
 
-## Claude Code
+## Agents
 
-`home/.claude/` holds the settings, statusline, themes and 22 skills vendored from
+The 22 skills live in `home/.agents/skills/`, vendored from
 [mattpocock/skills](https://github.com/mattpocock/skills) and
 [cursor/plugins](https://github.com/cursor/plugins).
 [`home/.claude/README.md`](home/.claude/README.md) says which skill to type, and when.
+
+`~/.agents/skills/` is the cross-client location from the
+[Agent Skills spec](https://agentskills.io/specification), so Cursor, Codex, Gemini
+CLI, opencode, Amp and the rest pick the same skills up. Claude Code reads only
+`~/.claude/skills/`, so every skill is also symlinked there. Both paths reach one
+copy of each file, and editing either one edits the same file.
+
+Adding a skill means creating the directory under `home/.agents/skills/`, then the
+matching symlink:
+
+```sh
+ln -s ../../.agents/skills/<name> home/.claude/skills/<name>
+dot link
+```
+
+`home/.claude/` also holds the settings, statusline, themes and the Claude-only
+subagent in `agents/`. Subagents have no cross-client format, so they stay there.
+
+`AGENTS.md` at the repo root is the instruction file for this repo. Claude Code
+reads it from version 2.1.277, and only when a folder has no `CLAUDE.md`, so this
+repo deliberately has no `CLAUDE.md` to shadow it.

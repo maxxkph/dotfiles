@@ -64,6 +64,39 @@ do_doctor() {
   done < <(shared_dirs home)
   (( any )) || _note "none declared"
 
+  # Skills are written once under home/.agents/skills and reached by two paths:
+  # ~/.agents/skills (every other agent) and ~/.claude/skills (Claude Code, which
+  # scans nothing else). A skill that resolves from only one of them is invisible
+  # to half the tools on this machine, and nothing else here would catch it.
+  bold "Agent skills"
+  local src="$DOTFILES/home/.agents/skills" sk skname total=0 broken=0 mismatched=0
+  if [[ ! -d "$src" ]]; then
+    _note "no skills in the repo"
+  else
+    for sk in "$src"/*/; do
+      [[ -d "$sk" ]] || continue
+      skname="$(basename "$sk")"
+      total=$((total + 1))
+      [[ -f "$HOME/.agents/skills/$skname/SKILL.md" ]] || {
+        _fail "$skname unreachable at ~/.agents/skills — other agents cannot see it"
+        broken=$((broken + 1)); continue
+      }
+      [[ -f "$HOME/.claude/skills/$skname/SKILL.md" ]] || {
+        _fail "$skname unreachable at ~/.claude/skills — Claude Code cannot see it"
+        broken=$((broken + 1)); continue
+      }
+      # The spec requires frontmatter name and directory name to match; a
+      # mismatch loads in some clients and is skipped by others.
+      [[ "$(awk -F': *' '/^name:/{print $2; exit}' "$sk/SKILL.md")" == "$skname" ]] \
+        || { _note "$skname: frontmatter name does not match the directory"
+             mismatched=$((mismatched + 1)); }
+    done
+    if (( broken == 0 )); then
+      _pass "$total skills reachable from ~/.agents/skills and ~/.claude/skills"
+    fi
+    (( mismatched )) && _note "$mismatched skill(s) with a name mismatch"
+  fi
+
   bold "Tools the configs depend on"
   local t
   for t in nvim git starship rg fd fzf tmux stow; do

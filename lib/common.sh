@@ -64,10 +64,16 @@ stow_packages() {
 # and every other tool's config would then be written inside it. Same for
 # ~/.claude, which Claude Code fills with projects/, history and memory.
 #
+# The two skills directories are on the list for the same reason. Claude Code
+# writes account-synced skills into ~/.claude/skills/synced, and other agents
+# install into ~/.agents/skills. Folding either one would put their writes
+# inside this repo.
+#
 # dot link pre-creates these so stow has to descend instead of folding.
 shared_dirs() { # <pkg>
   case "$1" in
-    home) printf '%s\n' ".config" ".claude" ".local" ".local/bin" ;;
+    home) printf '%s\n' ".config" ".claude" ".claude/skills" \
+                        ".agents" ".agents/skills" ".local" ".local/bin" ;;
     *)    : ;;
   esac
 }
