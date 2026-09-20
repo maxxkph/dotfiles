@@ -15,7 +15,7 @@ return {
   },
 
   -- Baseline colorscheme; auto-dark-mode swaps it per OS appearance.
-  -- dark  -> catppuccin-frappe  (matches ghostty's `dark:Catppuccin Frappe`)
+  -- dark  -> catppuccin-mocha  (matches ghostty's `dark:Catppuccin Mocha`)
   -- light -> catppuccin-latte
   --
   -- This has to agree with the auto-dark-mode callbacks below: LazyVim applies
@@ -27,7 +27,7 @@ return {
   -- callbacks.
   {
     "LazyVim/LazyVim",
-    opts = { colorscheme = "catppuccin-frappe" },
+    opts = { colorscheme = "catppuccin-mocha" },
   },
   {
     "f-person/auto-dark-mode.nvim",
@@ -37,7 +37,7 @@ return {
       update_interval = 3000,
       set_dark_mode = function()
         vim.o.background = "dark"
-        vim.cmd.colorscheme("catppuccin-frappe")
+        vim.cmd.colorscheme("catppuccin-mocha")
       end,
       set_light_mode = function()
         vim.o.background = "light"

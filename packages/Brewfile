@@ -72,6 +72,8 @@ cask "raycast"
 cask "stats"
 # Multiplayer code editor
 cask "zed"
+# Tool to reverse the direction of scrolling
+cask "scroll-reverser"
 # tsserver fallback for typescript-tools.nvim outside a project with a local copy
 npm "typescript"
 npm "corepack"
